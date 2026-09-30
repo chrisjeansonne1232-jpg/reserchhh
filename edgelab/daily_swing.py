@@ -314,10 +314,10 @@ def _passes(op: str, measured, threshold) -> bool:
     return {"==": measured == threshold, "<=": measured <= threshold, ">=": measured >= threshold}[op]
 
 
-def evaluate_requirements(measured: dict[str, object], details: dict[str, str] | None = None) -> list[ReqResult]:
-    """Pass/fail comes ONLY from the frozen SPEC (operator + threshold). A requirement with no measurement fails."""
+def evaluate_requirements(measured: dict[str, object], details: dict[str, str] | None = None, spec: dict | None = None) -> list[ReqResult]:
+    """Pass/fail comes ONLY from the frozen SPEC (operator + threshold). A requirement with no measurement fails. `spec` defaults to DAILY_SWING_V1's."""
     out = []
-    for r in SPEC["requirements"]:
+    for r in (spec or SPEC)["requirements"]:
         m = measured.get(r["id"])
         ok = _passes(r["op"], m, r["threshold"])
         out.append(ReqResult(r["id"], r["text"], f"{r['metric']} {r['op']} {r['threshold']}", m, ok, (details or {}).get(r["id"], "")))
@@ -329,15 +329,15 @@ class DailySwingGate:
     authorised accepted-limitation kind, which must still be present, quantified and OPEN in the record)."""
 
     @staticmethod
-    def undispositioned(ledger, accepted_kinds) -> list:
+    def undispositioned(ledger, accepted_kinds, gate_name: str | None = None) -> list:
         from .daily_swing_spec import GATE_NAME
-        return [g for g in ledger.unresolved_material(GATE_NAME) if g.kind not in accepted_kinds]
+        return [g for g in ledger.unresolved_material(gate_name or GATE_NAME) if g.kind not in accepted_kinds]
 
     @staticmethod
-    def check(results: list[ReqResult], ledger, accepted_kinds) -> tuple[bool, list[str]]:
+    def check(results: list[ReqResult], ledger, accepted_kinds, gate_name: str | None = None) -> tuple[bool, list[str]]:
         why = [f"requirement {r.rid} FAILED: {r.text} (measured {r.measured}; needs {r.comparison})" for r in results if not r.passed]
-        for g in DailySwingGate.undispositioned(ledger, accepted_kinds):
-            why.append(f"MATERIAL gap {g.gap_id} [{g.kind}] has no DAILY_SWING_V1 disposition: {g.detail[:110]}")
+        for g in DailySwingGate.undispositioned(ledger, accepted_kinds, gate_name):
+            why.append(f"MATERIAL gap {g.gap_id} [{g.kind}] has no {gate_name or 'DAILY_SWING_V1'} disposition: {g.detail[:110]}")
         for k in accepted_kinds:
             if not any(g.kind == k for g in ledger.gaps.values()):
                 why.append(f"accepted limitation {k} is not recorded in the ledger")

@@ -15,5 +15,6 @@ Status: **infrastructure built and self-tested; strategy discovery is NOT starte
   `edgelab/providers.py` env-only credentials + redaction. `scripts/ingest_*.py` and `scripts/build_integrity_report.py` reproduce the audit (raw data is git-ignored).
 * Integrity checks added: ticker renames / symbol re-use, rename-feed quality, delisted-name coverage, cross-provider daily/minute/splits, OHLC validity, zero-volume placeholders, tick sanity.
 * **DAILY_SWING_V1** (second, separate gate; the first gate is untouched): `docs/DAILY_SWING_V1_REQUIREMENTS.md` (frozen, hash in the registry), `docs/DAILY_SWING_V1_AUDIT.md` (result),
-  `edgelab/daily_swing*.py`, `scripts/audit_daily_swing_v1.py`. Status: **BLOCKED** (see the audit). Strategy discovery has NOT been started.
+  `edgelab/daily_swing*.py`, `scripts/audit_daily_swing_v1.py`. Status: **BLOCKED** (kept frozen as the record and comparison baseline).
+* **DAILY_SWING_V2** (V1 + one change, the ticker hand-over identity fix; the gate that governs daily-swing research): `docs/DAILY_SWING_V2_REQUIREMENTS.md`, `docs/DAILY_SWING_V2_AUDIT.md`, `edgelab/daily_swing_identity.py`, `scripts/audit_daily_swing_v2.py`. Status: **OPEN**. Strategy discovery has NOT been started and needs explicit confirmation.
 * No real-money execution exists anywhere in this code.

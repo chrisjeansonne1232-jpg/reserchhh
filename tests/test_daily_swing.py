@@ -246,3 +246,110 @@ def test_glued_spell_detection_uses_pit_figis_and_names():
     g = glued_spells(snaps, cube, member, near=20)
     assert g["ticker"].tolist() == ["GEN"]                                                # SEP's two issuers live in two spells: correctly NOT glued
     assert bool(g.iloc[0]["member_ever"]) and g.iloc[0]["name_similarity"] < 0.6
+
+
+# ------------------------------------------------------------------ DAILY_SWING_V2: V1 + one identity fix
+from edgelab.daily_swing_identity import boundaries, identity_mask, observations, timeline_violations      # noqa: E402
+from edgelab.daily_swing_v2_spec import GATE_NAME as V2_NAME, SPEC as V2, SPEC_SHA256 as V2_SHA           # noqa: E402
+
+
+def test_v2_differs_from_v1_only_where_declared():
+    assert V2_NAME == "DAILY_SWING_V2" and V2_SHA != SPEC_SHA256 and SPEC["name"] == "DAILY_SWING_V1"        # V1 is untouched and still V1
+    for section in ("scope", "universe", "split_resolution", "accepted_limitations"):
+        assert V2[section] == SPEC[section], section                                                        # every V1 parameter and threshold is copied unchanged
+    assert {k: v for k, v in V2["identity"].items() if k != "ticker_hand_over_fix"} == SPEC["identity"]
+    v1r, v2r = {r["id"]: r for r in SPEC["requirements"]}, {r["id"]: r for r in V2["requirements"]}
+    assert set(v2r) - set(v1r) == {"R6c", "R6d"} and set(v1r) <= set(v2r)
+    assert all(v2r[k] == v1r[k] for k in v1r if k != "R9")                                                  # no V1 requirement or threshold changed
+    assert {k: v for k, v in v2r["R9"].items() if k != "text"} == {k: v for k, v in v1r["R9"].items() if k != "text"}
+    assert v2r["R9"]["text"] == v1r["R9"]["text"].replace("DAILY_SWING_V1", "DAILY_SWING_V2")               # R9 differs only in naming its own gate
+    assert V2["declared_limitations_not_gated"][: len(SPEC["declared_limitations_not_gated"])] == SPEC["declared_limitations_not_gated"]
+    assert len(V2["declared_limitations_not_gated"]) == len(SPEC["declared_limitations_not_gated"]) + 3
+
+
+def obs_frame(rows):
+    return pd.DataFrame(rows, columns=["ticker", "date", "cik", "figi", "name"]).assign(date=lambda d: pd.to_datetime(d["date"]))
+
+
+def test_boundaries_use_cik_first_and_figi_only_as_fallback():
+    sess = pd.bdate_range("2020-01-01", periods=400)
+    o = obs_frame([
+        ("SWAP", sess[50], "111", "F1", "Old Co"), ("SWAP", sess[150], "222", "F2", "New Co"),        # issuer changed
+        ("CHURN", sess[50], "333", "F3", "Same Co"), ("CHURN", sess[150], "333", "F4", "Same Co Inc"),  # FIGI changed, same issuer: NO boundary
+        ("NOCIK", sess[50], None, "F5", "A"), ("NOCIK", sess[150], None, "F6", "B"),                   # no cik on either side: figi fallback
+        ("GAPCIK", sess[50], "444", "F7", "A"), ("GAPCIK", sess[150], None, "F8", "A"), ("GAPCIK", sess[250], "555", "F9", "B"),   # intermediate obs has no cik: compared across it
+        ("BLANK", sess[50], None, None, "?"), ("BLANK", sess[150], None, None, "?"),                   # nothing to compare
+    ])
+    b, st = boundaries(o, sess)
+    got = {r.ticker: (r.key_type, r.s1, r.s2) for r in b.itertuples()}
+    assert got == {"SWAP": ("cik", 50, 150), "NOCIK": ("figi_fallback", 50, 150), "GAPCIK": ("cik", 50, 250)}     # the wider window is kept, not shrunk
+    assert st["observations_with_no_key_skipped"] == 2 and "CHURN" not in got
+
+
+def glued_cube():
+    """GLUE: one continuous series (two issuers glued). SEP: two issuers separated by a >=60-session gap (already two spells)."""
+    rows = series("GLUE", 0, 300) + series("SEP", 0, 100, seed=5) + series("SEP", 200, 100, seed=6)
+    cube, _ = build_cube(frame(rows), SESS)
+    return cube
+
+
+def test_identity_mask_covers_ambiguity_window_plus_lookback_and_spares_separated_spells():
+    cube = glued_cube()
+    cols = ["ticker", "key_type", "key_before", "key_after", "d1", "d2", "name_before", "name_after", "s1", "s2"]
+    b = pd.DataFrame([("GLUE", "cik", "1", "2", SESS[100], SESS[160], "a", "b", 100, 160), ("SEP", "cik", "3", "4", SESS[99], SESS[190], "a", "b", 99, 190)], columns=cols)
+    m = identity_mask(cube, b, lookback=60)
+    g = list(cube.spell_ticker).index("GLUE")
+    assert not m[:101, g].any() and m[101:220, g].all() and not m[220:, g].any()                              # (s1, s2 + 60) = (100, 220): nothing earlier, nothing later
+    sep_cols = [i for i, t in enumerate(cube.spell_ticker) if t == "SEP"]
+    assert not m[:, sep_cols].any()                                                                          # old issuer's last bar IS the observation day; the new issuer's spell starts AFTER s2: nothing to mask
+    early = pd.DataFrame([("SEP", "cik", "3", "4", SESS[90], SESS[210], "a", "b", 90, 210)], columns=cols)   # hand-over observed while the old issuer still had bars 91..99
+    m2 = identity_mask(cube, early, lookback=60)
+    first, second = sorted(sep_cols, key=lambda i: cube.first[i])
+    assert m2[91:100, first].all() and not m2[:91, first].any()                                              # the old issuer's bars inside the ambiguity window are masked
+    on_bars = (m2 & cube.real())[:, second]                                                                  # only sessions where the spell HAS a bar are cells
+    assert on_bars[200:270].all() and not on_bars[270:].any() and on_bars.sum() == 70                        # a separate spell that STARTS inside the window (200 < s2=210) is masked too: bars in (s1, s2 + 60)
+
+
+def test_timeline_cross_check_catches_an_unmasked_glue_and_passes_after_masking():
+    cube = glued_cube()
+    g = list(cube.spell_ticker).index("GLUE")
+    member = np.zeros((cube.T, cube.S), dtype=bool); member[70:290, g] = True
+    o = obs_frame([("GLUE", SESS[100], "1", "F1", "a"), ("GLUE", SESS[160], "2", "F2", "b")])
+    bad, det = timeline_violations(cube, member, o, lookback=60)
+    assert bad > 0 and det.iloc[0]["ticker"] == "GLUE"                                                        # unmasked: cells straddle the hand-over
+    b, _ = boundaries(o, SESS)
+    masked = member & ~identity_mask(cube, b, lookback=60)
+    assert timeline_violations(cube, masked, o, lookback=60)[0] == 0                                          # after the mask: no member cell sees two issuers or the ambiguous window
+    assert masked[:101, g].sum() == 31 and masked[220:290, g].sum() == 70                                     # both clean sides survive
+
+
+def test_observations_add_current_master_key_for_active_names_only():
+    snaps = pd.DataFrame({"snapshot_date": [pd.Timestamp("2026-07-01")], "ticker": ["AAA"], "composite_figi": ["F"], "cik": ["1"], "name": ["A old"]})
+    master = pd.DataFrame({"ticker": ["AAA", "GONE"], "active": [True, False], "composite_figi": ["F2", "F3"], "cik": ["9", "8"], "name": ["A new", "Gone"]})
+    o = observations(snaps, master, pd.Timestamp("2026-09-29"))
+    assert sorted(zip(o["ticker"], o["cik"])) == [("AAA", "1"), ("AAA", "9")]                                # inactive master rows are not observations
+    b, _ = boundaries(o, pd.bdate_range("2026-06-01", "2026-09-30"))
+    assert len(b) == 1 and b.iloc[0]["key_after"] == "9"                                                     # a change after the last snapshot is caught via the master
+
+
+def test_identity_mask_parts_add_up_to_the_whole_and_only_the_window_is_lookahead():
+    cube = glued_cube()
+    b = pd.DataFrame([("GLUE", "cik", "1", "2", SESS[100], SESS[160], "a", "b", 100, 160)],
+                     columns=["ticker", "key_type", "key_before", "key_after", "d1", "d2", "name_before", "name_after", "s1", "s2"])
+    w, t, a = (identity_mask(cube, b, 60, part=p) for p in ("window", "tail", "all"))
+    assert np.array_equal(w | t, a) and not (w & t).any()
+    g = list(cube.spell_ticker).index("GLUE")
+    assert w[101:160, g].all() and not w[160:, g].any() and t[160:220, g].all() and not t[:160, g].any()
+
+
+def test_a_series_that_starts_inside_the_window_is_masked_but_one_that_starts_after_it_is_not():
+    cube = glued_cube()
+    cols = ["ticker", "key_type", "key_before", "key_after", "d1", "d2", "name_before", "name_after", "s1", "s2"]
+    second = sorted([i for i, t in enumerate(cube.spell_ticker) if t == "SEP"], key=lambda i: cube.first[i])[1]
+    inside = pd.DataFrame([("SEP", "cik", "3", "4", SESS[99], SESS[250], "a", "b", 99, 250)], columns=cols)      # second spell starts at 200, inside (99, 250)
+    after = pd.DataFrame([("SEP", "cik", "3", "4", SESS[99], SESS[200], "a", "b", 99, 200)], columns=cols)       # second spell starts at 200 == s2: after the window
+    assert identity_mask(cube, inside, 60)[:, second].any() and not identity_mask(cube, after, 60)[:, second].any()
+    o = obs_frame([("SEP", SESS[99], "3", "F", "a"), ("SEP", SESS[250], "4", "F", "b")])
+    member = np.zeros((cube.T, cube.S), dtype=bool); member[260:295, second] = True
+    assert timeline_violations(cube, member & ~identity_mask(cube, inside, 60)[:, :], o, 60)[0] == 0
+    assert timeline_violations(cube, member, o, 60)[0] > 0                                                      # and the cross-check WOULD have flagged the unmasked cells
