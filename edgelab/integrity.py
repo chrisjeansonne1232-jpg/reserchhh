@@ -55,18 +55,27 @@ class Gap:
 class GapLedger:
     """In-memory ledger; if a Registry is supplied every gap and status change is appended (immutable)."""
 
-    def __init__(self, registry=None):
+    def __init__(self, registry=None, gate: str | None = None):
+        """gate=None is the original ledger. gate='X' also records/reads events tagged for gate X (dispositions, scoped gaps); events tagged for a
+        gate are INVISIBLE to every ledger with a different gate value, so a second gate can never change the first gate's view."""
         self.gaps: dict[str, Gap] = {}
         self.reg = registry
+        self.gate = gate
         if registry is not None:
             self._replay()
+
+    def _emit(self, payload: dict):
+        if self.reg is not None:
+            self.reg.append("DATA_GAP", {**payload, "gate": self.gate} if self.gate else payload)
 
     def _replay(self):
         """Rebuild state from the registry so re-running an audit neither re-appends known gaps nor forgets earlier resolutions."""
         for e in self.reg.events("DATA_GAP"):
             p, ev = e["payload"], e["payload"].get("event")
+            if p.get("gate") not in (None, self.gate):
+                continue
             if ev == "OPENED":
-                self.gaps[p["gap_id"]] = Gap(**{k: v for k, v in p.items() if k != "event"})
+                self.gaps[p["gap_id"]] = Gap(**{k: v for k, v in p.items() if k not in ("event", "gate")})
             elif ev == "RESOLVED" and p["gap_id"] in self.gaps:
                 self.gaps[p["gap_id"]].status, self.gaps[p["gap_id"]].resolution = RESOLVED, p["resolution"]
             elif ev == "EXCLUDED" and p["gap_id"] in self.gaps:
@@ -78,24 +87,21 @@ class GapLedger:
             if g.gap_id in self.gaps:
                 continue
             self.gaps[g.gap_id] = g
-            if self.reg is not None:
-                self.reg.append("DATA_GAP", {"event": "OPENED", **asdict(g)})
+            self._emit({"event": "OPENED", **asdict(g)})
 
     def resolve(self, gap_id: str, how: str):
         g = self.gaps[gap_id]
         if g.status == RESOLVED and g.resolution == how:
             return
         g.status, g.resolution = RESOLVED, how
-        if self.reg is not None:
-            self.reg.append("DATA_GAP", {"event": "RESOLVED", "gap_id": gap_id, "resolution": how})
+        self._emit({"event": "RESOLVED", "gap_id": gap_id, "resolution": how})
 
     def exclude(self, gap_id: str, experiments: list[str], why: str):
         if not experiments:
             raise ValueError("an exclusion must name the experiments it applies to")
         g = self.gaps[gap_id]
         g.status, g.resolution, g.excluded_from = EXCLUDED, why, list(experiments)
-        if self.reg is not None:
-            self.reg.append("DATA_GAP", {"event": "EXCLUDED", "gap_id": gap_id, "resolution": why, "experiments": experiments})
+        self._emit({"event": "EXCLUDED", "gap_id": gap_id, "resolution": why, "experiments": experiments})
 
     def unresolved_material(self, experiment: str | None = None) -> list[Gap]:
         out = []
@@ -899,7 +905,7 @@ class IntegrityReport:
         if not mg:
             L.append("_none_")
         for g in mg[:200]:
-            L.append(f"- `{g.gap_id}` **{g.kind}** {g.ticker or ''} {g.start or ''}..{g.end or ''} — {g.detail} — status: **{g.status}** {g.resolution}")
+            L.append(f"- `{g.gap_id}` **{g.kind}** {g.ticker or ''} {g.start or ''}..{g.end or ''} — {g.detail} — status: **{g.status}**{(' for ' + ', '.join(g.excluded_from)) if g.excluded_from else ''} {g.resolution}")
         if len(mg) > 200:
             L.append(f"- … {len(mg) - 200} more in the registry")
         if self.provider_notes:

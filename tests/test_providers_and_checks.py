@@ -365,3 +365,29 @@ def test_long_placeholder_runs_reveal_dead_period_between_issuers():
     r = st["placeholder_runs_ge_min_run"]
     assert r["runs"] == 1 and r["tickers"] == 1 and "AAA" in r["examples"][0] and "(65 sessions)" in r["examples"][0]
     assert "derive alive from volume > 0" in gaps[0].detail
+
+
+# ------------------------------------------------------------------ a second gate must not change the first gate's view
+def test_gate_tagged_dispositions_are_invisible_to_the_default_ledger(tmp_path):
+    from edgelab.integrity import DiscoveryGate, ExperimentRequirements, IntegrityReport
+    from edgelab.registry import Registry
+    r = Registry(tmp_path / "r.sqlite")
+    base = GapLedger(r)
+    g = Gap("d", "coverage", "X", MATERIAL, "detail")
+    base.add([g])
+    rep = IntegrityReport()
+    rep.checks_run = list(IntegrityReport.REQUIRED_CHECKS)
+    rep.coverage = {"daily_bars": {"complete": True}}
+    req_old = ExperimentRequirements("OLD_GATE", ["US_EQUITY"], ["daily_bars"], ("2024-01-01", "2024-12-31"), "u")
+    before = DiscoveryGate.check(rep, req_old, base)
+    second = GapLedger(r, gate="SECOND")
+    assert second.gaps[g.gap_id].status == "OPEN"
+    second.exclude(g.gap_id, ["SECOND"], "out of scope for the second gate")
+    own = Gap("d2", "coverage", "Y", MATERIAL, "scoped gap of the second gate")
+    second.add([own])
+    assert second.unresolved_material("SECOND") == [second.gaps[own.gap_id]]              # excluded for SECOND, own gap still open
+    fresh_default = GapLedger(r)                                                        # what the first gate's builder sees on its next run
+    assert own.gap_id not in fresh_default.gaps and fresh_default.gaps[g.gap_id].status == "OPEN" and fresh_default.gaps[g.gap_id].excluded_from == []
+    assert DiscoveryGate.check(rep, req_old, fresh_default) == before                   # identical verdict AND identical reasons
+    again = GapLedger(r, gate="SECOND")
+    assert again.gaps[g.gap_id].status == "EXCLUDED" and again.gaps[g.gap_id].excluded_from == ["SECOND"] and own.gap_id in again.gaps
