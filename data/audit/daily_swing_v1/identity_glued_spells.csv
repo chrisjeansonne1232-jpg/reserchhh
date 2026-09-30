@@ -1,0 +1,325 @@
+ticker,figi_before,figi_after,name_before,name_after,name_similarity,last_snapshot_before,first_snapshot_after,spell,session_lo,session_hi,member_ever
+AAN,BBG00JZD1964,BBG00WCNDCZ6,"Aaron's, Inc.","The Aaron's Company, Inc.",0.5,2020-10-01,2021-01-04,24,1195,1259,True
+ACB,BBG006QSZVS9,BBG006SCSYG7,Aurora Cannabis Inc. Common Shares,Aurora Cannabis Inc. Common Shares,1.0,2020-04-01,2020-07-01,86,1068,1131,True
+ACCD,BBG00S2L1Z00,BBG00ZSK4ZQ7,"Accolade, Inc. Common Stock","Accolade, Inc. Common Stock",1.0,2025-01-02,2025-04-01,90,2264,2324,False
+ACET,BBG00D8FFF27,BBG00JCXSJP3,Aceto Corp,"Adicet Bio, Inc. Common Stock",0.0,2019-04-01,2020-10-01,99,815,1195,False
+ACHV,BBG00G9JXM62,BBG000FB8S62,"Achieve Life Sciences, Inc.","Achieve Life Sciences, Inc.",1.0,2020-07-01,2020-10-01,112,1131,1195,False
+ACOR,BBG00JQC2RQ3,BBG000FD10V8,"Acorda Therapeutics, Inc.","Acorda Therapeutics, Inc.",1.0,2020-10-01,2021-01-04,128,1195,1259,False
+ACST,BBG0076XCCQ7,BBG001NMDXS6,"Acasti Pharma, Inc.","Acasti Pharma, Inc.",1.0,2021-07-01,2021-10-01,138,1383,1447,False
+ADTN,BBG000C4K3D4,BBG0169CH7X9,Adtran Inc,"ADTRAN Holdings, Inc. Common Stock",1.0,2022-07-01,2022-10-03,202,1635,1699,False
+AEMD,BBG00DLK8SR4,BBG000L78XT8,AETHLON MEDICAL INC,AETHLON MEDICAL INC,1.0,2019-10-01,2020-01-02,228,942,1006,False
+AESI,BBG01DSV0616,BBG01JFZ96X4,Atlas Energy Solutions Inc.,Atlas Energy Solutions Inc.,1.0,2023-07-03,2024-01-02,241,1886,2012,False
+AGRX,BBG00KY63CW9,BBG000PZHFB0,"Agile Therapeutics, Inc","Agile Therapeutics, Inc",1.0,2022-04-01,2022-07-01,309,1573,1635,False
+AHT,BBG00JRSWHF8,BBG000PRZVD1,"Ashford Hospitality Trust, Inc.","Ashford Hospitality Trust, Inc.",1.0,2020-07-01,2021-10-01,331,1131,1447,True
+AIHS,BBG0163296S4,BBG00J3Q25V9,Senmiao Technology Limited Common Stock,Senmiao Technology Limited Common Stock,1.0,2022-04-01,2022-07-01,346,1573,1635,False
+AIV,BBG00D0MWZX3,BBG000DD3510,Apartment Investment and Management Company,Apartment Investment and Management Company,1.0,2020-10-01,2021-01-04,376,1195,1259,True
+ALIM,BBG00DJ642K6,BBG000QLS2G2,"Alimera Sciences, Inc.","Alimera Sciences, Inc.",1.0,2019-10-01,2020-01-02,431,942,1006,False
+AMCI,BBG00ZCX69R1,BBG01BFJ8R35,AMCI Acquisition Corp. II Class A Common Stock,AMC Robotics Corporation Common Stock,0.0,2023-01-03,2026-01-02,515,1762,2514,False
+AMR,BBG00KD92776,BBG00DGWV035,"Alta Mesa Resources, Inc. Class A Common Stock","Alpha Metallurgical Resources, Inc.",0.14,2019-07-01,2021-04-01,547,878,1320,True
+AMRH,BBG00P83FX91,BBG00R087X11,"Ameri Holdings, Inc. Common Stock","Ameri Holdings, Inc. Common Stock",1.0,2019-10-01,2020-01-02,550,942,1006,False
+ANAT,BBG00KDNVR33,BBG00RQ70GQ2,American National Insurance,"American National Group, Inc. Common Stock",0.5,2020-07-01,2020-10-01,581,1131,1195,False
+APA,BBG007254PQ2,BBG00YTS96G2,Apache Corporation,APA Corporation Common Stock,0.0,2021-01-04,2021-04-01,629,1259,1320,True
+APDN,BBG00JVYHDJ2,BBG000DGRCY6,"Applied DNA Sciences, Inc.","Applied DNA Sciences, Inc.",1.0,2019-10-01,2020-01-02,639,942,1006,False
+APO,BBG006T7HJF3,BBG00ZNLTFK3,"Apollo Global Management, Inc.","Apollo Global Management, Inc.",1.0,2021-10-01,2022-01-03,663,1447,1511,True
+APVO,BBG00DM1THV1,BBG009RRZ8C2,Aptevo Therapeutics Inc,Aptevo Therapeutics Inc,1.0,2020-01-02,2020-04-01,687,1006,1068,False
+ARCH,BBG00F0GRBQ8,BBG00DZB5D77,"Arch Coal, Inc.","Arch Resources, Inc.",0.33,2020-04-01,2020-07-01,715,1068,1131,True
+ARIS,BBG012PPXMR7,BBG000K0VQL1,"Aris Water Solutions, Inc.",Aris Mining Corporation,0.25,2025-10-01,2026-04-01,741,2450,2575,False
+ARNC,BBG00F48RVL3,BBG00R45JYB7,Arconic Inc,Arconic Corporation,1.0,2020-01-02,2020-04-01,753,1006,1068,True
+ASNA,BBG00DSV9RT2,BBG00JQ6G3J2,"Ascena Retail Group, Inc.","Ascena Retail Group, Inc.",1.0,2019-10-01,2020-01-02,807,942,1006,False
+ASRT,BBG008HKT766,BBG00V7T07Z6,"Assertio Therapeutics, Inc. Common Stock (DE)","Assertio Holdings, Inc. Common Stock",0.33,2020-04-01,2020-07-01,819,1068,1131,False
+ASRT,BBG00V7T07Z6,BBG00T442DS2,"Assertio Holdings, Inc. Common Stock","Assertio Holdings, Inc. Common Stock",1.0,2021-04-01,2021-07-01,819,1320,1383,False
+ATEX,BBG00L447VF8,BBG0081NLHR0,"pdvWireless, Inc.",Anterix Inc. Common Stock,0.0,2019-07-01,2019-10-01,851,878,942,False
+ATNM,BBG00JHPRPM5,BBG000RQZ245,"Actinium Pharmaceuticals, Inc","Actinium Pharmaceuticals, Inc",1.0,2020-07-01,2020-10-01,879,1131,1195,False
+AVEO,BBG00D8FGYK5,BBG000W5G4L3,"AVEO Pharmaceuticals, Inc.","AVEO Pharmaceuticals, Inc.",1.0,2020-01-02,2020-04-01,949,1006,1068,False
+AVGR,BBG00HVZ5C99,BBG000QCSTC7,"Avinger, Inc. Common Stock","Avinger, Inc. Common Stock",1.0,2022-01-03,2022-04-01,953,1511,1573,False
+AYTU,BBG00JRWYLM0,BBG000VC2PT9,"Aytu BioScience, Inc. Common Stock","AYTU BioPharma, Inc. Common Stock",0.33,2020-10-01,2021-01-04,1018,1195,1259,False
+AZPN,BBG000KRLLH9,BBG017J18W74,Aspen Technology Inc,Aspen Technology Inc,1.0,2022-04-01,2022-07-01,1026,1573,1635,True
+B,BBG000BCSCB1,BBG000BB07P9,Barnes Group Inc.,Barrick Mining Corporation,0.0,2025-01-02,2025-07-01,1034,2264,2386,True
+BALY,BBG005Q22HG8,BBG01QPXB2Q6,Bally's Corporation,Bally's Corporation,1.0,2025-01-02,2025-04-01,1047,2264,2324,False
+BAM,BBG000C9KL89,BBG01BPHNXZ3,Brookfield Asset Management Inc,Brookfield Asset Management Ltd.,1.0,2022-10-03,2023-01-03,1049,1699,1762,True
+BATRA,BBG00BFHD1D0,BBG01HCDRG86,Liberty Media Corporation Series A Liberty Braves Common Stock,"Atlanta Braves Holdings, Inc. Series A Common Stock",0.5,2023-07-03,2023-10-02,1064,1886,1949,False
+BATRK,BBG00BFHD5R6,BBG01HCX3Y34,Liberty Media Corporation Series C Liberty Braves Common Stock,"Atlanta Braves Holdings, Inc. Series C Common Stock",0.5,2023-07-03,2023-10-02,1065,1886,1949,False
+BBT,BBG00JPVTY24,BBG000BB00D7,BB&T Corporation,Beacon Financial Corporation,0.0,2019-10-01,2025-10-01,1090,942,2450,False
+BBUC,BBG015MRS011,BBG0211B3568,Brookfield Business Corporation Class A Exchangeable Subordinate Voting Shares,Brookfield Business Corporation Class A Subordinate Voting Shares,0.88,2026-01-02,2026-04-01,1092,2514,2575,False
+BEPC,BBG00W5FS571,BBG01RJ2V7B2,Brookfield Renewable Corporation Class A Subordinate Voting Shares,Brookfield Renewable Corporation Class A Exchangeable Subordinate Voting Shares,0.88,2024-10-01,2025-01-02,1163,2200,2264,False
+BGLC,BBG00N70PLY0,BBG01J2W2163,BioNexus Gene Lab Corp Common stock,BioNexus Gene Lab Corp Common stock,1.0,2026-07-01,2025-04-01,1194,2637,2324,False
+BGSF,BBG00DY87614,BBG005DLS9N2,BG Staffing Inc.,"BGSF, Inc.",0.0,2021-01-04,2021-04-01,1199,1259,1320,False
+BIMI,BBG00RCBTMH4,BBG000LJGFD9,BOQI International Medical Inc. Common Stock,BIMI International Medical Inc. Common Stock,0.5,2021-07-01,2022-04-01,1239,1383,1573,False
+BIOC,BBG008417M90,BBG000RRRD66,"Biocept, Inc.","Biocept, Inc.",1.0,2020-07-01,2020-10-01,1247,1131,1195,False
+BIOL,BBG007253RV3,BBG000DDG8B9,"Biolase, Inc.","Biolase, Inc.",1.0,2022-04-01,2022-07-01,1249,1573,1635,False
+BIOR,BBG007K8X5S6,BBG00VPKJTK3,"Biora Therapeutics, Inc. Common Stock","Biora Therapeutics, Inc. Common Stock",1.0,2024-10-01,2023-01-03,1251,2200,1762,False
+BIOS,BBG00G2BVTL6,BBG00JS04342,"BioScrip, Inc.","Option Care Health, Inc. Common Stock",0.0,2019-07-01,2019-10-01,1252,878,942,False
+BIPC,BBG00SDKZ304,BBG01RJ2W204,Brookfield Infrastructure Corporation Class A Subordinate Voting Shares,Brookfield Infrastructure Corporation Class A Exchangeable Subordinate Voting Shares,0.88,2024-10-01,2025-01-02,1257,2200,2264,False
+BLD,BBG0077VS2C0,BBG009J9C2K0,TopBuild Corp. Common Stock,TopBuild Corp. Common Stock,1.0,2026-04-01,2026-07-01,1299,2575,2637,True
+BLK,BBG000C2PW58,BBG000CN81W9,"Blackrock, Inc.","Blackrock, Inc.",1.0,2024-07-01,2024-10-01,1309,2136,2200,True
+BLK,BBG000CN81W9,BBG01PSW2WN4,"Blackrock, Inc.","Blackrock, Inc.",1.0,2024-10-01,2025-01-02,1309,2200,2264,True
+BLPH,BBG00G96G815,BBG007NP1D94,"Bellerophon Therapeutics, Inc.","Bellerophon Therapeutics, Inc.",1.0,2020-01-02,2020-04-01,1320,1006,1068,False
+BNL,BBG00XJFSX37,BBG000PWD2R3,"Broadstone Net Lease, Inc.","Broadstone Net Lease, Inc.",1.0,2021-01-04,2021-04-01,1369,1259,1320,False
+BNY,BBG000BZF6G2,BBG000BD8PN9,Blackrock New York Muni Tr,Bank of New York Mellon Corporation,0.14,2019-07-01,2026-07-01,1378,878,2637,True
+BPRN,BBG000TGXB29,BBG017RPLKV6,The Bank of Princeton,"Princeton Bancorp, Inc. Common Stock (PA)",0.17,2023-01-03,2023-04-03,1421,1762,1824,False
+BRBR,BBG016358V21,BBG013QNJHP8,"BellRing Brands, Inc.","BellRing Brands, Inc.",1.0,2022-01-03,2022-04-01,1435,1511,1573,True
+BTCY,BBG0080Q4W27,BBG00K55T9K5,"Biotricity, Inc. Common Stock","Biotricity, Inc. Common Stock",1.0,2024-07-01,2023-07-03,1524,2136,1886,False
+BW,BBG00HFMWHC1,BBG007H0TDK3,Babcock & Wilcox Enterprises Inc,"Babcock & Wilcox Enterprises, Inc.",1.0,2019-07-01,2019-10-01,1562,878,942,False
+BX,BBG00JPZ77X4,BBG000BH0106,The Blackstone Group Lp,Blackstone Inc.,0.25,2019-04-01,2019-07-01,1585,815,878,True
+CADE,BBG00BZSZZD5,BBG000D3MJP5,Cadence Bancorporation,Cadence Bank,0.33,2021-10-01,2022-01-03,1628,1447,1511,True
+CCMP,BBG00D8FHB88,BBG000BP3NW2,Cabot Microelectronics Corp,"CMC Materials, Inc. Common Stock",0.0,2020-07-01,2020-10-01,1771,1131,1195,True
+CDR,BBG00JRSWS19,BBG000BFBH12,"Cedar Realty Trust, Inc","Cedar Realty Trust, Inc",1.0,2020-10-01,2021-01-04,1813,1195,1259,False
+CECO,BBG00D8FHFZ9,BBG000BFG2J1,Career Education Corp,Ceco Environmental Corp,0.0,2019-10-01,2023-01-03,1827,942,1762,False
+CEI,BBG00FQSRZD5,BBG000D0NF14,"Camber Energy, Inc","Camber Energy, Inc",1.0,2019-07-01,2020-01-02,1829,878,1006,False
+CFRX,BBG00KVKBCQ9,BBG001J2MCH3,ContraFect Corporation,ContraFect Corporation,1.0,2020-01-02,2020-04-01,1891,1006,1068,False
+CGA,BBG00JPVT457,BBG000D5F435,China Green Agriculture Inc,CHINA GREEN AGRICULTURE INC,1.0,2019-04-01,2019-07-01,1897,815,878,False
+CGIX,BBG00K1Y3KD7,BBG00QQ11WS9,"Cancer Genetics, Inc. Common Stock","Cancer Genetics, Inc. Common Stock",1.0,2019-10-01,2020-01-02,1909,942,1006,False
+CHFS,BBG00FRWHLB9,BBG00YYB7ZV4,"CHF Solutions, Inc. Common Stock","CHF Solutions, Inc. Common Stock",1.0,2020-10-01,2021-01-04,1937,1195,1259,False
+CLMT,BBG000JNSM81,BBG01NQ82GB2,"Calumet Specialty Products Partners, L.P.","Calumet, Inc. Common Stock",0.2,2024-07-01,2024-10-01,2064,2136,2200,False
+CMCT,BBG00PQD57H8,BBG000BN7SF1,CIM Commercial Trust Corp.,Creative Media & Community Trust Corporation Common stock,0.17,2019-07-01,2019-10-01,2105,878,942,False
+CNET,BBG00DP4PXQ7,BBG000KBG7Z1,ChinaNet Online Holdings Inc.,ZW Data Action Technologies Inc. Common Stock,0.0,2020-10-01,2021-01-04,2151,1195,1259,False
+CNR,BBG000FV4RD6,BBG00HC114X0,"Cornerstone Building Brands, Inc.","Core Natural Resources, Inc.",0.0,2022-07-01,2025-04-01,2172,1635,2324,True
+COHR,BBG000BG1DH3,BBG000BLW102,Coherent Inc,Coherent Corp.,1.0,2022-07-01,2022-10-03,2211,1635,1699,True
+COR,BBG00H32TJ83,BBG000MDCQC2,Coresite Realty Corporation,"Cencora, Inc.",0.0,2021-10-01,2023-10-02,2235,1447,1949,True
+CPE,BBG00DX3DKC6,BBG000JSTBB9,Callon Petroleum Company,Callon Petroleum Company,1.0,2020-07-01,2020-10-01,2268,1131,1195,True
+CPE,BBG000JSTBB9,BBG000JH30V3,Callon Petroleum Company,Callon Petroleum Company,1.0,2024-01-02,2024-04-01,2268,2012,2073,True
+CPTA,BBG00JQC0KP1,BBG00Z19Q1K8,Capitala Finance Corp.,Capitala Finance Corp.,1.0,2020-07-01,2020-10-01,2293,1131,1195,False
+CR,BBG00CTGPFW0,BBG017BXPZ85,Crane Company,"Crane Holdings, Co.",1.0,2022-04-01,2022-07-01,2300,1573,1635,True
+CR,BBG017BXPZ85,BBG016G0L0Q5,"Crane Holdings, Co.",Crane Company,1.0,2023-04-03,2023-07-03,2300,1824,1886,True
+CREG,BBG00GVX5D49,BBG000BSP4V5,China Recycling Energy Corporation Common Stock,Smart Powerr Corp. Common Stock,0.0,2020-04-01,2020-07-01,2323,1068,1131,False
+CTO,BBG00L4C6951,BBG00Y3M1H59,Consolidated-Tomoka Land Co.,"CTO Realty Growth, Inc.",0.0,2020-04-01,2021-04-01,2432,1068,1320,False
+CUR,BBG00FQSMC41,BBG00JRPZBP3,"Neuralstem, Inc.","Neuralstem, Inc.",1.0,2019-07-01,2019-10-01,2473,878,942,False
+CVEO,BBG009NMM8H6,BBG009KJ2H24,CIVEO CORPORATION,Civeo Corporation,1.0,2020-10-01,2021-01-04,2490,1195,1259,False
+CWBC,BBG000JF5K69,BBG00L44MKC8,Community West BanCshares,Community West Bancshares Common Stock,1.0,2024-01-02,2024-04-01,2523,2012,2073,False
+CWBC,BBG00L44MKC8,BBG000MZYM65,Community West Bancshares Common Stock,Community West Bancshares Common Stock,1.0,2024-04-01,2024-07-01,2523,2073,2136,False
+CYCC,BBG00D1WLZH0,BBG000CT3XM2,"Cyclacel Pharmaceuticals, Inc","Cyclacel Pharmaceuticals, Inc",1.0,2020-04-01,2020-07-01,2551,1068,1131,False
+CZR,BBG00GX8ZDM9,BBG0074Q3NK6,Caesars Entertainment Corporation,"Caesars Entertainment, Inc. Common Stock",1.0,2020-07-01,2020-10-01,2574,1131,1195,True
+DBD,BBG000BGYDX9,BBG01HVHYBT6,Diebold Nixdorf Incorporated,"Diebold Nixdorf, Incorporated",1.0,2023-04-03,2023-10-02,2601,1824,1949,False
+DCOM,BBG00KD901T7,BBG000BGD220,Dime Community Bancshares,"Dime Commercial Bancshares, Inc.",0.5,2021-01-04,2021-04-01,2618,1259,1320,False
+DFFN,BBG00J0BLP77,BBG000N6JH48,DIFFUSION PHARMACEUTICALS INC,DIFFUSION PHARMACEUTICALS INC,1.0,2022-04-01,2022-07-01,2666,1573,1635,False
+DGLY,BBG000Q4CWM4,BBG019CJKQJ4,"Digital Ally, Inc. Common Stock","Digital Ally, Inc. Common Stock",1.0,2022-07-01,2022-10-03,2686,1635,1699,False
+DKNG,BBG00V9V7L54,BBG0134WCM78,DraftKings Inc. Class A Common Stock,DraftKings Inc. Class A Common Stock,1.0,2022-04-01,2022-07-01,2729,1573,1635,True
+DLPN,BBG00R8CLC32,BBG000H4XLP2,"Dolphin Entertainment, Inc.","Dolphin Entertainment, Inc.",1.0,2020-10-01,2021-01-04,2738,1195,1259,False
+DM,BBG00P17H053,BBG00Z7362Q9,"Desktop Metal, Inc.","Desktop Metal, Inc.",1.0,2025-01-02,2025-04-01,2745,2264,2324,True
+DMRC,BBG000G9F1Z5,BBG022G67PN4,Digimarc Corporation,Digimarc Corporation Common Stock,1.0,2026-04-01,2026-07-01,2757,2575,2637,False
+DOC,BBG004MF59H0,BBG000BKYDP9,PHYSICIANS REALTY TRUST,"Healthpeak Properties, Inc.",0.0,2024-01-02,2024-04-01,2791,2012,2073,True
+DRE,BBG000BHD8S7,BBG000K2Z7L5,Duke Realty Corp.,Duke Realty Corp.,1.0,2022-07-01,2022-10-03,2825,1635,1699,True
+DRIO,BBG0072BN671,BBG003V5P7K2,DarioHealth Corp. Common Stock,DarioHealth Corp. Common Stock,1.0,2019-10-01,2020-01-02,2829,942,1006,False
+DZSI,BBG00DSW0ZQ4,BBG000BHDXR3,"DASAN Zhone Solutions, Inc",DZS Inc. Common Stock,0.0,2020-07-01,2020-10-01,2927,1131,1195,False
+EBET,BBG01381B2X8,BBG00ZLGHH52,"Esports Technologies, Inc. Common Stock","EBET, INC. Common Stock",0.0,2022-04-01,2022-07-01,2942,1573,1635,False
+ECHO,BBG00K1823P0,BBG000TGLV00,"Echo Global Logistics, Inc.",EchoStar Corporation,0.0,2021-10-01,2026-07-01,2956,1447,2637,True
+ECOL,BBG00K2SQQS5,BBG00TDLZRD3,"US Ecology, Inc.","US Ecology, Inc.",1.0,2019-10-01,2020-01-02,2959,942,1006,False
+EEX,BBG00GMBP5G9,BBG00GCTWVH5,"Emerald Expositions Events, Inc.","Emerald Holding, Inc.",0.25,2020-01-02,2020-04-01,2991,1006,1068,False
+EFOI,BBG00FLZC5C7,BBG000BTLBB3,"Energy Focus, Inc.","Energy Focus, Inc.",1.0,2020-04-01,2020-07-01,2995,1068,1131,False
+EKSO,BBG00DR407T6,BBG002Z0NKK4,"Ekso Bionics Holdings, Inc. Common Stock","Ekso Bionics Holdings, Inc. Common Stock",1.0,2020-01-02,2020-04-01,3040,1006,1068,False
+EPAC,BBG00JQ5TCG3,BBG000B9WX45,Actuant Corporation,Enerpac Tool Group Corp.,0.0,2020-01-02,2020-04-01,3155,1006,1068,False
+EVA,BBG00JXL9H08,BBG007FH8JX4,"Enviva Partners, LP",Enviva Inc.,0.33,2021-10-01,2022-01-03,3277,1447,1511,False
+EVFM,BBG00J0BLQ02,BBG0026ZG450,"Evofem Biosciences, Inc. Common Stock","Evofem Biosciences, Inc. Common Stock",1.0,2022-04-01,2022-07-01,3291,1573,1635,False
+EVRI,BBG000H1B407,BBG000HPB8Y8,Everi Holdings Inc,Everi Holdings Inc,1.0,2025-04-01,2025-07-01,3309,2324,2386,False
+EYPT,BBG00KFMQ6S8,BBG000F90JX5,"EyePoint Pharmaceuticals, Inc. Common Stock","EyePoint, Inc. Common Stock",0.5,2020-10-01,2021-01-04,3351,1195,1259,False
+FCFS,BBG00DRGY598,BBG0145KL747,"FirstCash, Inc.","FirstCash Holdings, Inc. Common Stock",1.0,2021-10-01,2022-01-03,3417,1447,1511,True
+FET,BBG00JRPYDD3,BBG000PDVKL1,"FORUM ENERGY TECHNOLOGIES, INC.","Forum Energy Technologies, Inc.",1.0,2020-10-01,2021-01-04,3459,1195,1259,False
+FRT,BBG007256DM1,BBG000BJVN28,Federal Realty Investment Trust,Federal Realty Investment Trust,1.0,2021-10-01,2022-01-03,3681,1447,1511,True
+FSEA,BBG00P2YV4D0,BBG01CGKW1N7,First Seacoast Bancorp Common Stock,"First Seacoast Bancorp, Inc. Common Stock",1.0,2023-01-03,2023-04-03,3700,1762,1824,False
+FSK,BBG00JR40FV2,BBG001YCZP63,FS KKR Capital Corp. Common Stock,FS KKR Capital Corp. Common Stock,1.0,2020-04-01,2020-07-01,3706,1068,1131,False
+FTSI,BBG00JYSJCY5,BBG00JYQZ1M8,"FTS International, Inc. Common Stock","FTS International, Inc. Common Stock",1.0,2020-04-01,2020-07-01,3756,1068,1131,False
+FUN,BBG000BJZZX3,BBG00JVT1X51,"Cedar Fair, L.P.","Cedar Fair, L.P.",1.0,2024-04-01,2024-07-01,3769,2073,2136,True
+FUN,BBG00JVT1X51,BBG01K8GRMX6,"Cedar Fair, L.P.",Six Flags Entertainment Corporation,0.0,2024-07-01,2024-10-01,3769,2136,2200,True
+FVE,BBG00PZ5LZ03,BBG000BJRQT7,Five Star Senior Living Inc. Common Stock,Five Star Senior Living Inc. Common Stock,1.0,2019-07-01,2019-10-01,3782,878,942,False
+FWDI,BBG000BJRHG1,BBG020WJG333,"Forward Industries, Inc. Common Stock","Forward Industries, Inc. Common Stock",1.0,2026-01-02,2026-04-01,3793,2514,2575,False
+FWONA,BBG00BFHDCV6,BBG01HLMB809,Liberty Media Corporation Series A Liberty Formula One Common Stock,Liberty Media Corporation Series A Liberty Formula One Common Stock,1.0,2023-07-03,2023-10-02,3794,1886,1949,False
+FWONK,BBG00BFHDFR4,BBG01HLMBCG3,Liberty Media Corporation Series C Liberty Formula One Common Stock,Liberty Media Corporation Series C Liberty Formula One Common Stock,1.0,2023-07-03,2023-10-02,3795,1886,1949,True
+GAME,BBG00XD1LTB1,BBG00JCW80F9,"Engine Media Holdings, Inc. Common Stock","GameSquare Holdings, Inc. Common Stock",0.0,2021-10-01,2022-01-03,3822,1447,1511,False
+GE,BBG000NCBKZ2,BBG000BK6MB5,General Electric Company,GE Aerospace,0.0,2021-07-01,2021-10-01,3884,1383,1447,True
+GECC,BBG00JYGRLF3,BBG00D6RSP54,Great Elm Capital. Corp. Common Stock,Great Elm Capital. Corp. Common Stock,1.0,2022-01-03,2022-04-01,3886,1511,1573,False
+GEN,BBG000Q4FY01,BBG000BH2JM1,"Genesis Healthcare, Inc.",Gen Digital Inc. Common Stock,0.0,2021-01-04,2023-01-03,3903,1259,1762,True
+GHSI,BBG00QX1YPB8,BBG00FF4HHX9,"Guardion Health Sciences, Inc. Common Stock","Guardion Health Sciences, Inc. Common Stock",1.0,2021-01-04,2021-04-01,3949,1259,1320,False
+GLG,BBG00L8XW836,BBG004P486T2,"Bat Group, Inc. Common Stock","TD Holdings, Inc. Common Stock",0.0,2020-01-02,2020-04-01,4002,1006,1068,False
+GLT,BBG00D8FKWY9,BBG000BKFNX9,Glatfelter,Glatfelter Corporation,1.0,2020-10-01,2021-01-04,4021,1195,1259,False
+GNSS,BBG00JRSTXP6,BBG000CV6M39,LRAD Corporation,Genasys Inc. Common Stock,0.0,2020-01-02,2020-04-01,4069,1006,1068,False
+GOLD,BBG000BB07P9,BBG005ZVDK48,Barrick Gold Corp.,"Gold.com, Inc.",0.0,2025-04-01,2026-01-02,4083,2324,2514,False
+GRPN,BBG007F5WWQ2,BBG000QRKJ70,"Groupon, Inc.Common Stock","Groupon, Inc.Common Stock",1.0,2020-04-01,2020-07-01,4155,1068,1131,True
+HALL,BBG000D71472,BBG000KJL7H8,"Hallmark Financial Services, Inc.","Hallmark Financial Services, Inc.",1.0,2024-01-02,2023-01-03,4265,2012,1762,False
+HEXO,BBG00GNS7P40,BBG00G9J3624,HEXO Corp.,HEXO Corp. Common Shares,0.33,2020-10-01,2021-01-04,4355,1195,1259,False
+HGSH,BBG006R6QSM9,BBG000JNXK52,"China HGS Real Estate, Inc.","China HGS Real Estate, Inc.",1.0,2020-07-01,2020-10-01,4368,1131,1195,False
+HNGR,BBG000C52YP0,BBG000J9S9F3,Hanger Inc.,Hanger Inc.,1.0,2022-07-01,2022-10-03,4439,1635,1699,False
+HNVR,BBG00PZ0QM53,BBG01VV1VPD9,"Hanover Bancorp, Inc. Common Stock","Hanover Bancorp, Inc. Common Stock",1.0,2025-04-01,2025-07-01,4449,2324,2386,False
+HONE,BBG00L43XD07,BBG00NKZNGB6,"HarborOne Bancorp, Inc. Common Stock","HarborOne Bancorp, Inc. Common Stock",1.0,2019-07-01,2019-10-01,4463,878,942,False
+HPR,BBG00KFNJZC7,BBG00KVDW3P3,HighPoint Resources Corporation Common Stock,HighPoint Resources Corporation,1.0,2020-10-01,2021-01-04,4489,1195,1259,False
+HR,BBG000BB67F4,BBG000PRJCX9,Healthcare Realty Trust Incorporated,Healthcare Realty Trust Incorporated,1.0,2022-07-01,2022-10-03,4496,1635,1699,True
+HSDT,BBG008LG3HM8,BBG006QSQYY6,"Helius Medical Technologies, Inc. Class A Common Stock (DE)",Solana Company Class A Common Stock (DE),0.43,2020-10-01,2021-01-04,4517,1195,1259,False
+HTBX,BBG00FH3KX42,BBG004JDZPJ8,"Heat Biologics, Inc.","Heat Biologics, Inc.",1.0,2020-10-01,2021-01-04,4538,1195,1259,False
+HTGM,BBG00GBGVZ59,BBG001R01Y01,"HTG Molecular Diagnostics, Inc. Common Stock","HTG Molecular Diagnostics, Inc. Common Stock",1.0,2020-10-01,2021-01-04,4543,1195,1259,False
+HUSA,BBG00JWRM6J5,BBG000DS8D97,Houston American Energy Corp,Houston American Energy Corp,1.0,2020-07-01,2020-10-01,4572,1131,1195,False
+IAC,BBG008FFFM34,BBG00VWC8JS9,IAC/InterActiveCorp,IAC/InterActiveCorp Common Stock,1.0,2020-04-01,2020-07-01,4618,1068,1131,True
+IAC,BBG00VWC8JS9,BBG00S1LR2C3,IAC/InterActiveCorp Common Stock,IAC Inc. Common Stock,0.0,2021-04-01,2021-07-01,4618,1320,1383,True
+ICD,BBG00KJ0DVR2,BBG006PWRK77,"INDEPENDENCE CONTRACT DRILLING, INC","Independence Contract Drilling, Inc.",1.0,2020-01-02,2020-04-01,4656,1006,1068,False
+IMBI,BBG00JRQC3C8,BBG000D7Y779,"iMedia Brands, Inc. Class A Common Stock","iMedia Brands, Inc. Class A Common Stock",1.0,2019-10-01,2020-01-02,4740,942,1006,False
+INPX,BBG00G4Y22V4,BBG000BGP370,Inpixon Common Stock,Inpixon Common Stock,1.0,2020-01-02,2020-04-01,4820,1006,1068,False
+IPI,BBG00FZLLT40,BBG000V1Y6Q3,"Intrepid Potash, Inc","Intrepid Potash, Inc",1.0,2020-07-01,2020-10-01,4888,1131,1195,True
+IPWR,BBG00GPYRRZ5,BBG004YSSTM4,Ideal Power Inc.,Ideal Power Inc.,1.0,2019-07-01,2019-10-01,4906,878,942,False
+ISIG,BBG00J24TBJ1,BBG000CBDQY2,Insignia Systems Inc,Insignia Systems Inc,1.0,2020-10-01,2021-01-04,4942,1195,1259,False
+ITCI,BBG0026ZFZC4,BBG00G6L8JP4,Intra-Cellular Therapies Inc.,Intra-Cellular Therapies Inc.,1.0,2025-01-02,2025-04-01,4963,2264,2324,True
+J,BBG000BMFFQ0,BBG019C1BQR4,Jacobs Engineering Group,Jacobs Solutions Inc.,0.25,2022-07-01,2022-10-03,5003,1635,1699,True
+JAGX,BBG00HMJPP67,BBG005Z20406,"Jaguar Health, Inc.","Jaguar Health, Inc.",1.0,2021-07-01,2021-10-01,5009,1383,1447,False
+JAKK,BBG00FRYM5J6,BBG000GPK708,Jakks Pacific Inc,Jakks Pacific Inc,1.0,2020-07-01,2020-10-01,5011,1131,1195,False
+JE,BBG00JRJRQ82,BBG000F0CH38,JUST ENERGY GROUP INC.,Just Energy Group Inc,1.0,2020-07-01,2020-10-01,5042,1131,1195,False
+JILL,BBG00G72FK47,BBG00FZBYDS7,"J.Jill, Inc. Common Stock","J.Jill, Inc. Common Stock",1.0,2020-10-01,2021-01-04,5058,1195,1259,False
+JNPR,BBG000BY33P5,BBG000BWS318,Juniper Networks Inc,Juniper Networks Inc,1.0,2025-04-01,2025-07-01,5076,2324,2386,True
+KLXE,BBG00TSDQKJ4,BBG00KTFHJJ0,"KLX Energy Services Holdings, Inc. Common Stock","KLX Energy Services Holdings, Inc. Common Stock",1.0,2020-07-01,2020-10-01,5218,1131,1195,False
+LAC,BBG000BGM5P8,BBG01JLDH7S1,Lithium Americas Corp. Common Shares,Lithium Americas Corp.,0.5,2023-10-02,2024-01-02,5329,1949,2012,True
+LAZ,BBG00JPYN064,BBG000BT4C39,"Lazard, Inc.","Lazard, Inc.",1.0,2024-01-02,2024-04-01,5352,2012,2073,True
+LC,BBG0024L3WY3,BBG001YKDND6,LendingClub Corporation,LendingClub Corporation,1.0,2019-07-01,2019-10-01,5377,878,942,True
+LEE,BBG00DSW1188,BBG000BN4PM2,"Lee Enterprises, Inc.","Lee Enterprises, Inc.",1.0,2021-01-04,2021-04-01,5406,1259,1320,False
+LGTY,BBG000BBWFN8,BBG00K0C21D9,"Logility Supply Chain Solutions, Inc. Common Stock","Logility Supply Chain Solutions, Inc. Common Stock",1.0,2025-01-02,2025-04-01,5467,2264,2324,False
+LH,BBG000D9DMK0,BBG01MMT6PL7,Laboratory Corporation of America Holdings,Labcorp Holdings Inc.,0.0,2024-04-01,2024-07-01,5472,2073,2136,True
+LIFE,BBG00JVC1TH4,BBG001J2P692,"aTyr Pharma, Inc. Common Stock","aTyr Pharma, Inc. Common Stock",1.0,2019-04-01,2019-07-01,5488,815,878,False
+LION,BBG01MVGXTT9,BBG01TT3G7W9,Lionsgate Studios Corp. Common Shares,Lionsgate Studios Corp.,0.5,2025-04-01,2025-07-01,5508,2324,2386,False
+LLYVA,BBG01HMFL081,BBG01YY256K1,Liberty Media Corporation Series A Liberty Live Common Stock,"Liberty Live Holdings, Inc. Series A Liberty Live Group Common Stock",0.67,2025-10-01,2026-01-02,5539,2450,2514,False
+LLYVK,BBG01HMFLTN1,BBG01YYX1Z14,Liberty Media Corporation Series C Liberty Live Common Stock,"Liberty Live Holdings, Inc. Series C Liberty Live Group Common Stock",0.67,2025-10-01,2026-01-02,5540,2450,2514,False
+LMFA,BBG00K9HQNS9,BBG00BLYZ516,"LM Funding America, Inc. Common Stock","LM Funding America, Inc. Common Stock",1.0,2021-04-01,2021-07-01,5549,1320,1383,False
+LODE,BBG00G7672H3,BBG000BCBFG7,Comstock Mining Inc.,Comstock Inc.,0.5,2019-10-01,2020-01-02,5585,942,1006,False
+LOGC,BBG00D2PTTW3,BBG006DZTJ56,"LogicBio Therapeutics, Inc. Common Stock",ContextLogic Inc. Class A Common Stock,0.0,2022-10-03,2024-07-01,5586,1699,2136,True
+LRN,BBG00L43G1P5,BBG000QSXPZ9,"K12, Inc, Common Stock","Stride, Inc.",0.0,2020-10-01,2021-01-04,5625,1195,1259,True
+LSBK,BBG000M2RGF9,BBG01W7CYXF8,"Lake Shore Bancorp, Inc.","Lake Shore Bancorp, Inc.",1.0,2025-07-01,2025-10-01,5631,2386,2450,False
+LSPD,BBG00S5KBZB6,BBG00PZ78ZM0,Lightspeed POS Inc.,Lightspeed Commerce Inc.,0.33,2021-07-01,2021-10-01,5640,1383,1447,True
+LSXMA,BBG00BFHD827,BBG01HLM8W28,Liberty Media Corporation Series A Liberty SiriusXM Common Stock,Liberty Media Corporation Series A Liberty SiriusXM Common Stock,1.0,2023-07-03,2023-10-02,5644,1886,1949,True
+LSXMB,BBG00BFHD8X3,BBG01HLMB5J5,Liberty Media Corporation Series B Liberty SiriusXM Common Stock,Liberty Media Corporation Series B Liberty SiriusXM Common Stock,1.0,2023-07-03,2023-10-02,5645,1886,1949,False
+LSXMK,BBG00BFHD9S7,BBG01HLMB6H5,Liberty Media Corporation Series C Liberty SiriusXM Common Stock,Liberty Media Corporation Series C Liberty SiriusXM Common Stock,1.0,2023-07-03,2023-10-02,5646,1886,1949,True
+LTBR,BBG00DGB79L9,BBG000DDGCT1,Lightbridge Corp.,Lightbridge Corp.,1.0,2019-10-01,2020-01-02,5647,942,1006,False
+LUMN,BBG00JNK6NJ1,BBG000BGLRN3,"Lumen Technologies, Inc.","Lumen Technologies, Inc.",1.0,2021-01-04,2021-04-01,5670,1259,1320,True
+MARA,BBG00JCJB5G2,BBG001K7WBT8,"Marathon Patent Group, Inc.","MARA Holdings, Inc. Common Stock",0.0,2021-01-04,2021-04-01,5751,1259,1320,True
+MBRX,BBG00GBR9WG5,BBG00B9T47L9,"Moleculin Biotech, Inc.","Moleculin Biotech, Inc.",1.0,2021-01-04,2021-04-01,5796,1259,1320,False
+MDLY,BBG00K2708R0,BBG0070HYRH1,Medley Management Inc,Medley Management Inc,1.0,2020-10-01,2021-01-04,5861,1195,1259,False
+MFA,BBG00K03R9G2,BBG000BL6138,"MFA Financial, Inc","MFA Financial, Inc",1.0,2022-04-01,2022-07-01,5916,1573,1635,False
+MITT,BBG00D8FFZ78,BBG001KJLYZ7,"AG MORTGAGE INVESTMENT TRUST, INC.","TPG Mortgage Investment Trust, Inc.",0.6,2021-07-01,2021-10-01,6003,1383,1447,False
+MOSY,BBG00FZZ1ZM7,BBG00YLVQ5P6,"MoSys, Inc. Common Stock","MoSys, Inc. Common Stock",1.0,2019-07-01,2019-10-01,6116,878,942,False
+MRNS,BBG00JPZB233,BBG00253KMF6,"Marinus Pharmaceuticals, Inc","Marinus Pharmaceuticals, Inc",1.0,2020-07-01,2020-10-01,6163,1131,1195,False
+MSGE,BBG00L9HLWV8,BBG019980TD4,Madison Square Garden Entertainment Corp.,Madison Square Garden Entertainment Corp.,1.0,2023-04-03,2023-07-03,6191,1824,1886,False
+MTCH,BBG00CKGNB69,BBG00VT0KNC3,"Match Group, Inc","Match Group, Inc",1.0,2020-04-01,2020-07-01,6220,1068,1131,True
+MYO,BBG00H5HMKV6,BBG002B0JJV6,Myomo Inc.,Myomo Inc.,1.0,2020-01-02,2020-04-01,6292,1006,1068,False
+MYSZ,BBG00JRQSXZ0,BBG00DG7N9N8,"My Size, Inc","My Size, Inc",1.0,2019-10-01,2020-01-02,6299,942,1006,False
+NBEV,BBG00HMSJD25,BBG005YW6FV6,New Age Beverages Corporation Common Stock,"NewAge, Inc. Common Stock (Delaware)",0.0,2020-07-01,2020-10-01,6341,1131,1195,True
+NCNO,BBG00XV46Z91,BBG014GJ8XH2,"nCino, Inc. Common Stock","nCino, Inc. Common Stock",1.0,2022-01-03,2022-04-01,6367,1511,1573,True
+NCSM,BBG00L43BBP8,BBG00G6DYB34,"NCS Multistage Holdings, Inc.","NCS Multistage Holdings, Inc.",1.0,2020-10-01,2021-01-04,6375,1195,1259,False
+NINE,BBG004M28MF9,BBG020W1T2N8,"Nine Energy Service, Inc.","Nine Energy Service, Inc.",1.0,2026-01-02,2026-04-01,6484,2514,2575,False
+NMRD,BBG00JYLFT40,BBG0068FC7D1,"Nemaura Medical, Inc. Common Stock","Nemaura Medical, Inc. Common Stock",1.0,2019-10-01,2020-01-02,6527,942,1006,False
+NN,BBG00XP8D3W6,BBG017XG00X4,NextNav Inc. Common Stock,NextNav Inc. Common Stock,1.0,2022-04-01,2022-07-01,6532,1573,1635,False
+NNVC,BBG00K1ZJK74,BBG000C0WN63,NanoViricides Inc.,NanoViricides Inc.,1.0,2019-07-01,2019-10-01,6541,878,942,False
+NOG,BBG00JDLCSD8,BBG000DRTDR6,"Northern Oil and Gas, Inc. Common Stock","Northern Oil and Gas, Inc.",1.0,2020-07-01,2020-10-01,6547,1131,1195,True
+NOV,BBG007254QL5,BBG000BJX8C8,"National Oilwell Varco, Inc.",NOV Inc.,0.0,2020-10-01,2021-01-04,6553,1195,1259,True
+NOVN,BBG00G96GCZ9,BBG002V17386,"Novan, Inc. Common Stock","Novan, Inc. Common Stock",1.0,2021-04-01,2021-07-01,6555,1320,1383,False
+NSPR,BBG00D88L476,BBG000QDM9D4,"InspireMD, Inc.","InspireMD, Inc.",1.0,2021-04-01,2021-07-01,6617,1320,1383,False
+NTRP,BBG00RRH2073,BBG000N25B45,"Neurotrope, Inc. Common","NextTrip, Inc. Common Stock",0.0,2020-10-01,2024-04-01,6649,1195,2073,False
+NURO,BBG00GQ72BB1,BBG000BB88M2,"NeuroMetrix, Inc. Common Stock","NeuroMetrix, Inc. Common Stock",1.0,2019-10-01,2020-01-02,6665,942,1006,False
+NVCN,BBG00F9Q4D42,BBG000H11ST4,Neovasc Inc.,Neovasc Inc.,1.0,2022-04-01,2022-07-01,6679,1573,1635,False
+NVFY,BBG00G3TT0D1,BBG000QL42S5,"Nova Lifestyle, Inc.","Nova Lifestyle, Inc.",1.0,2019-10-01,2020-01-02,6687,942,1006,False
+NVIV,BBG008GCGQX7,BBG00XZQ4BZ4,InVivo Therapeutics Holdings Corp,InVivo Therapeutics Holdings Corp,1.0,2020-01-02,2020-04-01,6689,1006,1068,False
+NVIV,BBG00XZQ4BZ4,BBG000MFKJB5,InVivo Therapeutics Holdings Corp,InVivo Therapeutics Holdings Corp,1.0,2022-04-01,2022-07-01,6689,1573,1635,False
+NVRI,BBG000BLH3P8,BBG01YQ379B0,Enviri Corporation,Enviri Corporation,1.0,2026-04-01,2026-07-01,6698,2575,2637,False
+NVRO,BBG001K61W36,BBG00JPZ1YF1,NEVRO CORP.,NEVRO CORP.,1.0,2025-01-02,2025-04-01,6699,2264,2324,True
+NXTD,BBG00D88L7D2,BBG0043BXM26,"Nxt-ID, Inc.","Nxt-ID, Inc.",1.0,2021-10-01,2022-01-03,6741,1447,1511,False
+OBLN,BBG00F150413,BBG00PVKGY30,"Obalon Therapeutics, Inc.","Obalon Therapeutics, Inc.",1.0,2019-07-01,2019-10-01,6787,878,942,False
+OCN,BBG00JRKN6D1,BBG000BPYHJ6,Ocwen Financial Corporation,Ocwen Financial Corporation,1.0,2020-07-01,2020-10-01,6808,1131,1195,False
+ODP,BBG00D0MY8Y0,BBG00R24W7X2,Office Depot Inc.,The ODP Corporation Common Stock,0.0,2020-04-01,2020-07-01,6821,1068,1131,False
+OI,BBG008B8N9Y0,BBG00R2JZG39,Owens Illinois Inc.,"O-I Glass, Inc.",0.0,2019-10-01,2020-01-02,6854,942,1006,False
+ONVO,BBG007F5Y3M8,BBG001M8GFD0,Organovo Holdings Inc.,Organovo Holdings Inc.,1.0,2020-07-01,2020-10-01,6930,1131,1195,False
+OPGN,BBG00DSW3H09,BBG001J1CY88,"OpGen, Inc","OpGen, Inc",1.0,2019-07-01,2019-10-01,6943,878,942,False
+OSG,BBG0071D5R09,BBG004HQHKK0,Overseas Shipholding Group Inc.,"Octave Specialty Group, Inc.",0.2,2024-07-01,2026-01-02,6999,2136,2514,False
+PBLA,BBG000CZCGG2,BBG0186FWWJ5,"Panbela Therapeutics, Inc. Common Stock","Panbela Therapeutics, Inc. Common Stock",1.0,2022-04-01,2022-07-01,7142,1573,1635,False
+PCOM,BBG00HNLCMJ8,BBG014DH5WR3,Points International Ltd. (Canada),Points.com Inc. Common Shares,0.0,2022-01-03,2022-04-01,7161,1511,1573,False
+PDLB,BBG00K5WXZM1,BBG014XDMDV8,PDL Community Bancorp Common Stock,"Ponce Financial Group, Inc. Common Stock",0.0,2022-01-03,2022-04-01,7183,1511,1573,False
+PDS,BBG00JR5HJY0,BBG000BBK2X9,Precision Drilling Corporation,Precision Drilling Corporation,1.0,2020-10-01,2021-01-04,7187,1195,1259,False
+PHX,BBG00L43BFR7,BBG000C38CT3,Panhandle Oil and Gas Inc.,PHX Minerals Inc.,0.0,2020-10-01,2021-01-04,7292,1195,1259,False
+PIXY,BBG00HC257B1,BBG00FHYBQD9,"ShiftPixy, Inc. Common Stock","ShiftPixy, Inc. Common Stock",1.0,2019-10-01,2020-01-02,7314,942,1006,False
+PKE,BBG00KDNVVW2,BBG000BR89C6,Park Electrochemical,Park Aerospace Corp. Common Stock,0.33,2019-07-01,2019-10-01,7321,878,942,False
+PLM,BBG00CTTJ8F4,BBG000J1HC10,PolyMet Mining Corp.,PolyMet Mining Corp.,1.0,2020-07-01,2020-10-01,7343,1131,1195,False
+PLX,BBG00G2BW0S1,BBG000JW08N5,"Protalix BioTherapeutics, Inc. Common Stock","Protalix BioTherapeutics, Inc. Common Stock",1.0,2019-10-01,2020-01-02,7365,942,1006,False
+PMGM,BBG00Z17HDW3,BBG00XRTCHR4,Priveterra Acquisition Corp. Class A Common Stock,Priveterra Acquisition Corp. II Class A Common Stock,0.8,2023-07-03,2023-10-02,7380,1886,1949,False
+PNFP,BBG000C1XKF6,BBG01Z7V4LL1,Pinnacle Financial Partners In,"Pinnacle Financial Partners, Inc.",0.75,2025-10-01,2026-01-02,7396,2450,2514,True
+POAI,BBG00PGN3YK6,BBG000PVXTF7,Predictive Oncology Inc. Common Stock,Predictive Oncology Inc. Common Stock,1.0,2019-10-01,2020-01-02,7411,942,1006,False
+PRTS,BBG00FBDJY82,BBG000N26V95,"U.S. Auto Parts Network, Inc.","CarParts.com, Inc. Common Stock",0.0,2020-07-01,2020-10-01,7512,1131,1195,False
+PSTI,BBG00JRGHZ98,BBG000DQX509,"Pluristem Therapeutics, Inc.","Pluristem Therapeutics, Inc.",1.0,2019-07-01,2019-10-01,7546,878,942,False
+PTE,BBG00DJ69NK5,BBG000BK69X0,"PolarityTE, Inc. Common Stock","PolarityTE, Inc. Common Stock",1.0,2022-04-01,2022-07-01,7557,1573,1635,False
+PTMN,BBG00JNKW1Z2,BBG000BMSWV3,Portman Ridge Finance Corporation Common Stock,Portman Ridge Finance Corporation Common Stock,1.0,2021-07-01,2021-10-01,7572,1383,1447,False
+PULM,BBG00FX6BXZ3,BBG003TH2QL1,"Pulmatrix, Inc. Common Stock","Pulmatrix, Inc. Common Stock",1.0,2022-01-03,2022-04-01,7591,1511,1573,False
+QDEL,BBG000C6GN04,BBG017TGV7M2,Quidel Corp,QuidelOrtho Corporation Common Stock,0.0,2022-04-01,2022-07-01,7647,1573,1635,True
+QUIK,BBG00KXQLPS2,BBG000BFGMQ9,QuickLogic Corp,QuickLogic Corp,1.0,2019-10-01,2020-01-02,7702,942,1006,False
+RBC,BBG000BRXTR8,BBG000GMGNB3,Regal Beloit Corporation,RBC Bearings Incorporated,0.0,2021-10-01,2022-10-03,7749,1447,1699,True
+RCM,BBG000PLPHH2,BBG018CZLZ09,R1 RCM Inc. Common Stock,R1 RCM Inc. Common Stock,1.0,2022-04-01,2022-07-01,7774,1573,1635,True
+RKLB,BBG00Y61SZL5,BBG01V7JN3F3,"Rocket Lab USA, Inc. Common Stock",Rocket Lab Corporation Common Stock,0.67,2025-04-01,2025-07-01,7908,2324,2386,True
+RMBL,BBG00PDM9H95,BBG005XNT8X6,"RumbleOn, Inc. Class B Common Stock","RumbleOn, Inc. Class B Common Stock",1.0,2020-04-01,2020-07-01,7928,1068,1131,False
+RMED,BBG00VSH4H65,BBG0029BD0V2,"Ra Medical Systems, Inc","Ra Medical Systems, Inc",1.0,2020-10-01,2021-01-04,7933,1195,1259,False
+RMTI,BBG00JSC68W2,BBG000BMC004,"Rockwell Medical, Inc. (DE) Common Stock","Rockwell Medical, Inc. (DE) Common Stock",1.0,2022-04-01,2022-07-01,7944,1573,1635,False
+RNA,BBG00FQ7LXW1,BBG01Z0T3959,"Avidity Biosciences, Inc. Common Stock","Atrium Therapeutics, Inc. Common Stock",0.0,2026-01-02,2026-04-01,7945,2514,2575,True
+RPT,BBG000DVHX23,BBG000KX9MV2,RPT Realty Common Shares of Beneficial Interest (MD),RPT Realty Common Shares of Beneficial Interest (MD),1.0,2023-10-02,2024-01-02,8010,1949,2012,False
+RPT,BBG000KX9MV2,BBG008200KW9,RPT Realty Common Shares of Beneficial Interest (MD),Rithm Property Trust Inc.,0.0,2024-01-02,2025-01-02,8010,2012,2264,False
+SAFE,BBG00GFK4M37,BBG000H35J52,Safehold Inc.,Safehold Inc.,1.0,2023-01-03,2023-04-03,8123,1762,1824,False
+SBGI,BBG000F2XXP2,BBG01GJ3NY88,Sinclair Broadcast Group Inc,"Sinclair, Inc. Class A Common Stock",0.2,2023-04-03,2023-07-03,8182,1824,1886,True
+SCYX,BBG00DPDSH43,BBG002133YW4,"SCYNEXIS, Inc.","SCYNEXIS, Inc.",1.0,2020-07-01,2020-10-01,8249,1131,1195,False
+SES,BBG00JF8MPX8,BBG000D7YF08,Synthesis Energy Systems Inc.,Synthesis Energy Systems Inc.,1.0,2019-07-01,2019-10-01,8303,878,942,False
+SGBX,BBG00H1L1VG7,BBG00G6C5KF5,"SG Blocks, Inc. Common Stock",Safe & Green Holdings Corp. Common Stock,0.0,2020-01-02,2020-04-01,8334,1006,1068,False
+SGEN,BBG00D0MYTC8,BBG000BH0FR6,Seattle Genetics Inc,Seagen Inc. Common Stock,0.0,2020-10-01,2021-01-04,8340,1195,1259,True
+SGLB,BBG00FWZSDB2,BBG000N25B45,"Sigma Labs, Inc. Common Stock","Sigma Labs, Inc. Common Stock",1.0,2020-01-02,2020-04-01,8349,1006,1068,False
+SINO,BBG00FBJK1P0,BBG000FYWZ32,"Sino-Global Shipping America, Ltd","Sino-Global Shipping America, Ltd",1.0,2020-07-01,2020-10-01,8422,1131,1195,False
+SINT,BBG00J7CPKM8,BBG000QVHQW1,"SiNtx Technologies, Inc. Common Stock","SiNtx Technologies, Inc. Common Stock",1.0,2019-07-01,2019-10-01,8423,878,942,False
+SIRI,BBG000BT0093,BBG01KJQM3Y8,"Sirius XM Holdings,  Inc","Sirius XM Holdings,  Inc",1.0,2024-07-01,2024-10-01,8428,2136,2200,True
+SLG,BBG00YZDP199,BBG00Z0HWK86,SL Green Realty Corp.,SL Green Realty Corp.,1.0,2021-01-04,2021-04-01,8476,1259,1320,True
+SLG,BBG00Z0HWK86,BBG000BVP5P2,SL Green Realty Corp.,SL Green Realty Corp.,1.0,2022-01-03,2022-04-01,8476,1511,1573,True
+SLS,BBG00F9ZYQV0,BBG000VC77H7,"SELLAS Life Sciences Group, Inc. Common Stock","SELLAS Life Sciences Group, Inc. Common Stock",1.0,2019-10-01,2020-01-02,8497,942,1006,True
+SNES,BBG00J3Q44M0,BBG002VBFQL9,"SenesTech, Inc. Common Stock","SenesTech, Inc. Common Stock",1.0,2020-01-02,2020-04-01,8562,1006,1068,False
+SNTI,BBG010WX7ZB3,BBG021Y8RQQ5,"Senti Biosciences, Inc. Common Stock","Senti Biosciences Holdings, Inc. Common Stock",1.0,2026-04-01,2026-07-01,8585,2575,2637,False
+SONM,BBG00P4JDQ42,BBG000D5J0L9,"Sonim Technologies, Inc. Common Stock","DNA X, Inc. Common Stock",0.0,2021-07-01,2021-10-01,8613,1383,1447,False
+SPWR,BBG000FVQ185,BBG00ZCW2DK5,SunPower Corporation Common Stock,SunPower Inc. Common Stock,1.0,2024-07-01,2025-07-01,8688,2136,2386,False
+SQBG,BBG00VDFKNN5,BBG00B5D0C59,"Sequential Brands Group, Inc.","Sequential Brands Group, Inc.",1.0,2020-07-01,2020-10-01,8692,1131,1195,False
+SRAX,BBG00HZ6QGG9,BBG003GW8KW7,"Social Reality, Inc. Class A Common Stock","SRAX, Inc. Class A Common Stock",0.4,2019-07-01,2019-10-01,8700,878,942,False
+SRRA,BBG00FRMRH92,BBG0026ZD5Y8,"Sierra Oncology, Inc. Common Stock","Sierra Oncology, Inc. Common Stock",1.0,2020-01-02,2020-04-01,8719,1006,1068,False
+SSSS,BBG00JC9YM18,BBG001D2TV80,Sutter Rock Capital Corp. Common Stock,SuRo Capital Corp. Common Stock,0.25,2020-04-01,2020-07-01,8753,1068,1131,False
+STAF,BBG00XWV2TP0,BBG0025CGG82,"Staffing 360 Solutions, Inc. Common Stock (DE)","Staffing 360 Solutions, Inc. Common Stock (DE)",1.0,2021-04-01,2021-07-01,8765,1320,1383,False
+STR,BBG00HFMM0W7,BBG01C36Y855,Sitio Royalties Corp.,Sitio Royalties Corp.,1.0,2022-10-03,2023-01-03,8817,1699,1762,False
+STRR,BBG000BVZVL8,BBG000KSMLN9,"Star Equity Holdings, Inc. Common Stock","Star Equity Holdings, Inc. Common Stock",1.0,2025-07-01,2025-10-01,8824,2386,2450,False
+SUNW,BBG006WY2WJ3,BBG000MG0XL3,"Sunworks, Inc.","Sunworks, Inc.",1.0,2019-07-01,2019-10-01,8863,878,942,True
+SVT,BBG000BTPZ26,BBG01KFX7HH2,"Servotronics, Inc.","Servotronics, Inc.",1.0,2025-04-01,2025-07-01,8893,2324,2386,False
+SWAG,BBG00ZCX33T5,BBG0019ZS5F2,Software Acquisition Group Inc. III Class A Common Stock,"Stran & Company, Inc. Common Stock",0.0,2022-07-01,2023-01-03,8898,1635,1762,False
+SWI,BBG00P83GWP4,BBG00M1CKSK7,SolarWinds Corporation Common Stock,SolarWinds Corporation Common Stock,1.0,2021-07-01,2021-10-01,8909,1383,1447,False
+SWN,BBG000BTR593,BBG000JY3JD5,Southwestern Energy Company,Southwestern Energy Company,1.0,2024-07-01,2024-10-01,8919,2136,2200,True
+TA,BBG00K9PSM74,BBG000F71CC6,TravelCenters of America LLC,TravelCenters of America LLC,1.0,2019-07-01,2019-10-01,8962,878,942,True
+TARA,BBG00RD285R2,BBG001ZLYSH5,"ArTara Therapeutics, Inc. Common Stock","Protara Therapeutics, Inc. Common Stock",0.33,2020-04-01,2020-07-01,8981,1068,1131,False
+TBLT,BBG00RKFLCD0,BBG00YGNW2D3,"ToughBuilt Industries, Inc. Common Stock","ToughBuilt Industries, Inc. Common Stock",1.0,2024-01-02,2020-07-01,9003,2012,1131,False
+TBLT,BBG00YGNW2D3,BBG00LDFP150,"ToughBuilt Industries, Inc. Common Stock","ToughBuilt Industries, Inc. Common Stock",1.0,2022-04-01,2022-07-01,9003,1573,1635,False
+TBNK,BBG000M1LNP1,BBG00L4BMR46,Territorial Bancorp Inc.,Territorial Bancorp Inc.,1.0,2025-01-02,2025-04-01,9006,2264,2324,False
+TEAM,BBG00BDQ1H13,BBG01BGWHFR5,Atlassian Corporation Class A Common Stock,Atlassian Corporation Class A Common Stock,1.0,2022-10-03,2023-01-03,9058,1699,1762,True
+TNXP,BBG00G96GK27,BBG00R4FG9L2,Tonix Pharmaceuticals Holding Corp.,Tonix Pharmaceuticals Holding Corp.,1.0,2019-10-01,2020-01-02,9241,942,1006,False
+TNXP,BBG00R4FG9L2,BBG000LG8XM5,Tonix Pharmaceuticals Holding Corp.,Tonix Pharmaceuticals Holding Corp.,1.0,2022-04-01,2022-07-01,9241,1573,1635,False
+TPL,BBG00JNKZCH5,BBG00YRJXKB1,Texas Pacific Land Trust,Texas Pacific Land Corporation,0.75,2021-01-04,2021-04-01,9283,1259,1320,True
+TRNX,BBG00GSP2YF5,BBG000JCHY90,"Taronis Technologies, Inc. Common Stock","Taronis Technologies, Inc. Common Stock",1.0,2019-07-01,2019-10-01,9337,878,942,False
+TRQ,BBG0091VBHL7,BBG000NSHMZ7,Turquoise Hill Resources Ltd,Turquoise Hill Resources Ltd,1.0,2020-10-01,2021-01-04,9344,1195,1259,False
+TRST,BBG00KD903P7,BBG000BVNVQ6,Trustco Bank Corp NY,Trustco Bank Corp NY,1.0,2021-04-01,2021-07-01,9348,1320,1383,False
+TRXC,BBG00JHPRVN1,BBG00R4FTK33,"TransEnterix, Inc.",TransEnterix Inc.,1.0,2019-10-01,2020-01-02,9363,942,1006,False
+TSLX,BBG00JWP0R16,BBG001DFW799,TPG SPECIALTY LENDING INC,"Sixth Street Specialty Lending, Inc.",0.4,2020-04-01,2020-07-01,9375,1068,1131,False
+TTGT,BBG000BH65V7,BBG01LPRTGV4,"TechTarget, Inc.","TechTarget, Inc. Common Stock",1.0,2024-10-01,2025-01-02,9398,2200,2264,False
+TTNP,BBG00KDYCVJ4,BBG000BTGSY7,TITAN PHARMACEUTICAL INC,TITAN PHARMACEUTICAL INC,1.0,2020-10-01,2021-01-04,9401,1195,1259,False
+TTPH,BBG00JNKN6B7,BBG00TSSJJ84,"Tetraphase Pharmaceuticals, Inc.","Tetraphase Pharmaceuticals, Inc.",1.0,2019-07-01,2019-10-01,9403,878,942,False
+TURN,BBG00GBVFY39,BBG000KG4T49,180 Degree Capital Corp.,180 Degree Capital Corp.,1.0,2020-10-01,2021-01-04,9416,1195,1259,False
+TXMD,BBG00JVKBQ81,BBG000LKB954,"TherapeuticsMD, Inc.","TherapeuticsMD, Inc.",1.0,2022-04-01,2022-07-01,9457,1573,1635,False
+TYHT,BBG00DYKFY35,BBG0089LTDY9,"Shineco, Inc. Common Stock","Shineco, Inc. Common Stock",1.0,2020-07-01,2020-10-01,9468,1131,1195,False
+UAN,BBG00JPQXL73,BBG001CBC4Y0,CVR PARTNERS LP,"CVR Partners, LP",1.0,2020-10-01,2021-01-04,9484,1195,1259,False
+UFPI,BBG00JNK39N0,BBG000BL0T06,Universal Forest Products Inc,"UFP Industries, Inc. Common Stock",0.0,2020-04-01,2020-07-01,9516,1068,1131,False
+USAS,BBG009BF1F54,BBG000CG1PT2,Americas Silver Corporation,Americas Gold and Silver Corporation,0.5,2019-07-01,2019-10-01,9583,878,942,False
+USAU,BBG00DB7GMJ7,BBG000H95997,U.S. Gold Corp. Common Stock,U.S. Gold Corp. Common Stock,1.0,2020-01-02,2020-04-01,9586,1006,1068,False
+USEG,BBG00D6QZVF4,BBG000BW5LG7,US Energy Corp Wyoming,U.S. Energy Corp. Common Stock (DE),0.5,2020-01-02,2020-04-01,9595,1006,1068,False
+VHI,BBG00K16KF31,BBG000BWCZY8,"Valhi, Inc.","Valhi, Inc.",1.0,2020-04-01,2020-07-01,9707,1068,1131,False
+VISL,BBG00D6QZX15,BBG001WQRP45,"Vislink Technologies, Inc. Common Stock","Vislink Technologies, Inc. Common Stock",1.0,2020-07-01,2020-10-01,9738,1131,1195,False
+VIVE,BBG00JVJWT03,BBG000CD9K76,VIVEVE MED INC,VIVEVE MED INC,1.0,2019-07-01,2021-01-04,9741,878,1259,False
+VNOM,BBG006G57XG0,BBG01VXTFCN2,"Viper Energy, Inc. Class A Common Stock","Viper Energy, Inc. Class A Common Stock",1.0,2025-07-01,2025-10-01,9779,2386,2450,True
+VOXX,BBG000H83Q11,BBG000HJ5717,VOXX International Corporation Class A,VOXX International Corporation Class A,1.0,2025-01-02,2025-04-01,9792,2264,2324,False
+VRM,BBG009NGKQ45,BBG01RRT38B3,"Vroom, Inc. Common Stock","Vroom, Inc. Common Stock",1.0,2024-10-01,2025-04-01,9807,2200,2324,True
+VYNE,BBG00XDHWKD1,BBG00H5W8GM8,VYNE Therapeutics Inc. Common Stock,VYNE Therapeutics Inc. Common Stock,1.0,2021-01-04,2021-04-01,9883,1259,1320,False
+WISA,BBG00R2NLJW7,BBG00KLHTJY4,"Summit Wireless Technologies, Inc. Common Stock","WiSA Technologies, Inc. Common Stock",0.25,2020-04-01,2020-07-01,10001,1068,1131,False
+WLL,BBG007R8ZWH0,BBG00WYYC600,Whiting Petroleum Corporation,Whiting Petroleum Corporation,1.0,2020-07-01,2020-10-01,10020,1131,1195,True
+WOLF,BBG000BG14P4,BBG01XLDHDP0,"Wolfspeed, Inc.","Wolfspeed, Inc.",1.0,2025-07-01,2025-10-01,10046,2386,2450,True
+WSC,BBG00JHWRTW1,BBG00B0FS947,WillScot Corporation Common Stock,WillScot Holdings Corporation Class A Common Stock,0.33,2020-07-01,2020-10-01,10081,1131,1195,True
+WW,BBG007257SC8,BBG000DY6735,"Weight Watchers International, Inc.","WW International, Inc. Common Stock",0.25,2019-07-01,2019-10-01,10118,878,942,True
+WW,BBG000DY6735,BBG01VRS3V61,"WW International, Inc. Common Stock","WW International, Inc. Common Stock",1.0,2025-04-01,2025-10-01,10118,2324,2450,True
+WYY,BBG00JRWRL20,BBG000HRY432,WidePoint Corporation,WidePoint Corporation,1.0,2020-10-01,2021-01-04,10132,1195,1259,False
+XOM,BBG000GZQ728,BBG000H5HTR8,Exxon Mobil Corporation,Exxon Mobil Corporation,1.0,2026-04-01,2026-07-01,10178,2575,2637,True
+XPER,BBG00FGT3074,BBG00RBFBL50,Xperi Corporation Common Stock,Xperi Holding Corporation Common Stock,0.5,2020-04-01,2020-07-01,10189,1068,1131,False
+XPER,BBG00RBFBL50,BBG019FGSSM1,Xperi Holding Corporation Common Stock,Xperi Inc,0.5,2022-07-01,2022-10-03,10189,1635,1699,False
+XRX,BBG007GJG347,BBG00NNG2ZJ8,Xerox Corp,Xerox Holdings Corporation Common Stock,1.0,2019-07-01,2019-10-01,10204,878,942,True
+YUMA,BBG00F48FJ51,BBG000BRT032,Yuma Energy Inc,Yuma Energy Inc,1.0,2019-07-01,2019-10-01,10275,878,942,False
+ZYME,BBG00GD15LJ5,BBG019XSYC89,Zymeworks Inc.,Zymeworks Inc.,1.0,2022-10-03,2023-01-03,10360,1699,1762,False

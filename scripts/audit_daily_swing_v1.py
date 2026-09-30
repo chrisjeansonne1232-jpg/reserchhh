@@ -405,7 +405,8 @@ for r in results:
     m = r.measured
     ms = f"{m:.4%}" if isinstance(m, float) and r.rid in ("R2b", "R2c", "R4c", "R7a", "R7b") else (f"{m:.4f}" if isinstance(m, float) else str(m))
     L.append(f"| {r.rid} | {r.text} | {r.comparison} | {ms} | **{'PASS' if r.passed else 'FAIL'}** | {r.detail} |")
-L += ["", "## Why the gate is " + ("open" if ok else "blocked"), ""] + ([f"- {w}" for w in why] or ["- every requirement passed and no gap is undispositioned"])
+L += ["", "Notes on the measurements: **R7** compares two vendors that both deliver consolidated SIP prints (closes are bit-identical on 100% of the sampled bars; volume is identical on about two thirds), so it validates the data path, not an independent price source. "
+      "The point-in-time test (R5a) is run on the real data at three random cut dates; the rest of the universe logic is covered by unit tests with planted defects.", "", "## Why the gate is " + ("open" if ok else "blocked"), ""] + ([f"- {w}" for w in why] or ["- every requirement passed and no gap is undispositioned"])
 L += ["", "## Point-in-time universe", "", f"Top {SPEC['universe']['top_n']} by trailing {SPEC['universe']['lookback_sessions']}-session median dollar volume (>= {SPEC['universe']['min_real_bars_in_lookback']} real bars, last close >= ${SPEC['universe']['min_last_close']:.0f}), "
       "membership for session t computed from sessions < t only; exclusions applied afterwards.", "", md_table(by_year), "",
       f"Spells: {S:,} ({cube_stats['tickers']:,} tickers; {cube_stats['tickers_with_multiple_spells']} with more than one spell). Placeholder bars set aside: {cube_stats['placeholder_bars_not_cells']:,}. Ever-member spells (window): {int(ever_raw.sum()):,}."]
@@ -416,8 +417,8 @@ L += ["", "## Empirical split resolution", "", f"{len(claims)} claims in the win
 dis = ev[ev["disputed"]]
 tst = dis[~dis["why"].str.startswith("untestable")]
 L += [f"Disputed events: {len(dis)}. Testable from prices: {len(tst)}; verdicts {tst['verdict'].value_counts().to_dict()}. Untestable (claimed adjustment below |ln m| = {SPEC['split_resolution']['untestable_if_abs_log_ratio_below']}): "
-      f"{int(dis['why'].str.startswith('untestable').sum())}. **Who was right** when prices decided a single-source claim: CONFIRMED {dict(dis[dis['verdict'] == 'CONFIRMED']['sources'].value_counts())}, "
-      f"REFUTED {dict(dis[dis['verdict'] == 'REFUTED']['sources'].value_counts())}: neither provider's table is reliable on its own.",
+      f"{int(dis['why'].str.startswith('untestable').sum())}. **Who was right** when prices decided a single-source claim: CONFIRMED {({k: int(v) for k, v in dis[dis['verdict'] == 'CONFIRMED']['sources'].value_counts().items()})}, "
+      f"REFUTED {({k: int(v) for k, v in dis[dis['verdict'] == 'REFUTED']['sources'].value_counts().items()})}: neither provider's table is reliable on its own.",
       "", f"Unrecorded overnight discontinuities among raw member cells: {disc['class'].value_counts().to_dict()}. Full tables in `data/audit/daily_swing_v1/`."]
 if surv["recorded"]:
     A, B, Cc, Dd, Ee = (surv[k] for k in ("A_listed_but_no_bars", "B_terminal_returns", "C_exclusion_composition", "D_identity", "E_instrument_mix"))
@@ -432,8 +433,14 @@ L += ["", "## Declared limitations (not gated)", ""] + [f"- {x}" for x in SPEC["
 L += ["", "## Weaknesses of the V1 rules found while auditing (V1 is frozen and was run exactly as written)", "",
       "- **Split tolerance is tight for reverse-split ex-dates**: `tol = max(4*sigma, 0.05)` with a 1.5% sigma floor rejects true reverse splits whose ex-date open moves 7-10% around the ratio; those spells are excluded although the split is real.",
       "- **Unrecorded-discontinuity rule can flag genuine crashes** whose size happens to match a common ratio (2020-03-09 energy names, PCG 2019-01-14) and then excludes the name from that session on, removing post-crash history: a composition bias.",
-      "- **`CS` includes ADS lines and closed-end funds** (see E above); V1 does not filter them.",
-      "Proposed for a DAILY_SWING_V2 (needs your confirmation; not applied): widen tolerance for reverse splits using the post-event volume scaling, exclude only the affected session window rather than the rest of the spell, and filter ADS/funds by FIGI/exchange metadata."]
+      "- **`CS` can include ADS lines and closed-end funds** in Massive's typing (they appear among listed-but-no-bars names); a name-pattern check found none among the universe members (E above), but the check is a heuristic and V1 has no instrument filter.",
+      "- **V1 has no rule for ticker hand-overs**: the point-in-time listings show one bar series running across a FIGI change for a set of member spells, some of them clearly different issuers (see D). This is what blocks the gate.",
+      "Proposed for a DAILY_SWING_V2 (needs your confirmation; not applied): (1) split each spell at a PIT FIGI change (or exclude it from that point, the same 'ambiguous -> exclude' principle used for splits); (2) widen the split tolerance for reverse splits using post-event volume scaling; "
+      "(3) exclude only the affected session window for an unrecorded jump instead of the rest of the spell; (4) filter instrument type by FIGI/exchange metadata."]
+if surv["recorded"]:
+    lo_, hi_ = surv["D_identity"]["member_cells_after_the_swap_window"]["lower_bound_from_first_snapshot_after"], surv["D_identity"]["member_cells_after_the_swap_window"]["upper_bound_from_last_snapshot_before"]
+    L += ["", f"*Cost of fix (1), for your decision only, not applied and not part of V1:* it would remove at most {lo_:,}-{hi_:,} further member cells ({lo_ / ncell_raw:.2%}-{hi_ / ncell_raw:.2%} of raw member cells; some overlap the split exclusions), "
+          f"taking total removals to at most about {(ncell_removed + hi_) / ncell_raw:.1%}, still under the 5% ceiling in R4c."]
 OUT.write_text("\n".join(L) + "\n")
 reg.append("INTEGRITY_REPORT", {"experiment": GATE_NAME, "gate_open": bool(ok), "n_reasons": len(why), "spec_sha256": SPEC_SHA256, "dataset": DS,
                                "requirements": {r.rid: [None if r.measured is None else (bool(r.measured) if isinstance(r.measured, (bool, np.bool_)) else float(r.measured)), bool(r.passed)] for r in results}})

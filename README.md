@@ -14,4 +14,6 @@ Status: **infrastructure built and self-tested; strategy discovery is NOT starte
 * `edgelab/alpaca.py` primary price source (Alpaca free SIP, raw, historical-only, refuses windows newer than 15 min); `edgelab/massive.py` free-tier reference/splits/cross-validation;
   `edgelab/providers.py` env-only credentials + redaction. `scripts/ingest_*.py` and `scripts/build_integrity_report.py` reproduce the audit (raw data is git-ignored).
 * Integrity checks added: ticker renames / symbol re-use, rename-feed quality, delisted-name coverage, cross-provider daily/minute/splits, OHLC validity, zero-volume placeholders, tick sanity.
+* **DAILY_SWING_V1** (second, separate gate; the first gate is untouched): `docs/DAILY_SWING_V1_REQUIREMENTS.md` (frozen, hash in the registry), `docs/DAILY_SWING_V1_AUDIT.md` (result),
+  `edgelab/daily_swing*.py`, `scripts/audit_daily_swing_v1.py`. Status: **BLOCKED** (see the audit). Strategy discovery has NOT been started.
 * No real-money execution exists anywhere in this code.
