@@ -51,18 +51,24 @@
   "note": "the return from the last observed bar to the end of the security (cash-out, distressed exit, delisting) is not observed for any of these; the sensitivity is arithmetic, not an estimate"
  },
  "C_exclusion_composition": {
-  "excluded_member_spells": 167,
-  "share_of_member_spells": 0.0782,
-  "by_cause": {
+  "excluded_member_spells_distinct": 126,
+  "exclusion_events_touching_member_spells": 167,
+  "share_of_member_spells": 0.059,
+  "cause_of_each_spells_earliest_exclusion": {
+   "UNRECORDED_SPLIT_LIKE_DISCONTINUITY": 46,
+   "AGREED_SPLIT_TESTABLE_AMBIGUOUS": 43,
+   "DISPUTED_SPLIT_AMBIGUOUS": 37
+  },
+  "exclusion_events_by_cause": {
    "DISPUTED_SPLIT_AMBIGUOUS": 62,
    "AGREED_SPLIT_TESTABLE_AMBIGUOUS": 53,
    "UNRECORDED_SPLIT_LIKE_DISCONTINUITY": 52
   },
   "member_cells_removed_share": 0.026,
-  "share_of_excluded_spells_that_later_stop_trading": 0.234,
+  "share_of_excluded_spells_that_later_stop_trading": 0.254,
   "same_share_for_all_member_spells": 0.232,
-  "median_prior_60_session_raw_log_return_at_exclusion": -0.012,
-  "n_prior": 167,
+  "median_prior_60_session_raw_log_return_at_exclusion": -0.057,
+  "n_prior": 126,
   "note": "exclusions remove names from the moment the data becomes ambiguous; this is a composition change, direction of the return bias NOT measured"
  },
  "D_identity": {

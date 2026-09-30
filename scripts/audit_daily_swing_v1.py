@@ -238,7 +238,8 @@ if len(snap_files) and len(snap_files) == len(expected_dates):
     hazard = term_df.groupby("year").size().reindex(sorted(set(yrs)), fill_value=0) / avg_size
     # exclusion composition (composition only; forward returns are deliberately NOT computed here)
     ended_all = float((cube.last[member_raw.any(0)] < T - 6).mean())
-    ex_ever = excl[excl["ever_member"]] if len(excl) else excl
+    ex_rows = excl[excl["ever_member"]] if len(excl) else excl                                  # one row per exclusion EVENT (a spell can have several)
+    ex_ever = ex_rows.sort_values("from_session").drop_duplicates("spell") if len(ex_rows) else ex_rows   # one row per distinct SPELL (its earliest exclusion)
     ended_ex = float((cube.last[ex_ever["spell"].to_numpy(dtype=int)] < T - 6).mean()) if len(ex_ever) else float("nan")
     prior = []
     for r in ex_ever.itertuples():
@@ -259,8 +260,10 @@ if len(snap_files) and len(snap_files) == len(expected_dates):
                                "observed_final_20_session_raw_log_return_quantiles": {q: round(float(term_df['final_20_session_log_return_raw'].quantile(q)), 3) for q in (0.1, 0.25, 0.5, 0.75, 0.9)} if len(term_df) else {},
                                "sensitivity_annual_drag_bps_of_an_always_invested_equal_weight_book_if_unobserved_terminal_return_were": {f"{x:+.0%}": round(float(hazard.mean()) * x * 1e4, 1) for x in (-0.3, -0.6, -1.0)},
                                "note": "the return from the last observed bar to the end of the security (cash-out, distressed exit, delisting) is not observed for any of these; the sensitivity is arithmetic, not an estimate"},
-        "C_exclusion_composition": {"excluded_member_spells": int(len(ex_ever)), "share_of_member_spells": round(len(ex_ever) / max(1, int(ever_raw.sum())), 4),
-                                    "by_cause": ex_ever["cause"].value_counts().to_dict() if len(ex_ever) else {}, "member_cells_removed_share": round(ncell_removed / ncell_raw, 4),
+        "C_exclusion_composition": {"excluded_member_spells_distinct": int(len(ex_ever)), "exclusion_events_touching_member_spells": int(len(ex_rows)),
+                                    "share_of_member_spells": round(len(ex_ever) / max(1, int(ever_raw.sum())), 4),
+                                    "cause_of_each_spells_earliest_exclusion": ex_ever["cause"].value_counts().to_dict() if len(ex_ever) else {},
+                                    "exclusion_events_by_cause": ex_rows["cause"].value_counts().to_dict() if len(ex_rows) else {}, "member_cells_removed_share": round(ncell_removed / ncell_raw, 4),
                                     "share_of_excluded_spells_that_later_stop_trading": round(ended_ex, 3), "same_share_for_all_member_spells": round(ended_all, 3),
                                     "median_prior_60_session_raw_log_return_at_exclusion": round(float(np.median(prior)), 3) if prior else None, "n_prior": len(prior),
                                     "note": "exclusions remove names from the moment the data becomes ambiguous; this is a composition change, direction of the return bias NOT measured"},
@@ -351,7 +354,7 @@ if surv["recorded"]:
                     f"expected missing universe members ~{A['median_expected_missing_members_point']:.0f} of 1000 per date (range {A['range_expected'][0]:.0f}-{A['range_expected'][1]:.0f}; upper bound {A['median_upper_bound_missing_members']}, lower bound 0). "
                     f"(B) {B['member_spells_ended']} member spells stop trading before the data ends (mean annual hazard {B['mean_annual_hazard']:.1%} of the universe); their terminal returns are unobserved; sensitivity of an always-invested equal-weight book: "
                     f"{B['sensitivity_annual_drag_bps_of_an_always_invested_equal_weight_book_if_unobserved_terminal_return_were']} bps/yr. (C) Exclusions removed {Cc['member_cells_removed_share']:.2%} of member cells "
-                    f"({Cc['excluded_member_spells']} spells; composition change, return-bias direction not measured). Details: data/audit/daily_swing_v1/survivorship_quantification.json.",
+                    f"({Cc['excluded_member_spells_distinct']} distinct spells from {Cc['exclusion_events_touching_member_spells']} exclusion events; composition change, return-bias direction not measured). Details: data/audit/daily_swing_v1/survivorship_quantification.json.",
                     start=SPEC["scope"]["window_start"], end=str(LAST.date()))])
     for kind in ("DELISTED_NAMES_NO_BARS", "DELISTING_RETURN_UNKNOWN", "MISSING_TAIL"):
         kind_rules[kind] = (True, f"ACCEPTED LIMITATION: component of {acc_kind} (authorised by the requester), quantified there. Not resolved.")
@@ -441,6 +444,17 @@ if surv["recorded"]:
     lo_, hi_ = surv["D_identity"]["member_cells_after_the_swap_window"]["lower_bound_from_first_snapshot_after"], surv["D_identity"]["member_cells_after_the_swap_window"]["upper_bound_from_last_snapshot_before"]
     L += ["", f"*Cost of fix (1), for your decision only, not applied and not part of V1:* it would remove at most {lo_:,}-{hi_:,} further member cells ({lo_ / ncell_raw:.2%}-{hi_ / ncell_raw:.2%} of raw member cells; some overlap the split exclusions), "
           f"taking total removals to at most about {(ncell_removed + hi_) / ncell_raw:.1%}, still under the 5% ceiling in R4c."]
+CORRECTIONS = [{"correction_id": "C1_excluded_spell_count", "about_gap_kind": acc_kind,
+                "was": "text of the accepted-limitation gap recorded in the first audit run says '167 spells' excluded",
+                "is": f"126 distinct member spells ({int(len(ex_rows)) if surv['recorded'] else 'n/a'} exclusion events, share of member spells "
+                      f"{(len(ex_ever) / max(1, int(ever_raw.sum()))) if surv['recorded'] else float('nan'):.1%}); 167 was the number of exclusion events. The 2.60% of member cells removed was correct."}]
+have = {e["payload"].get("correction_id") for e in reg.events("NOTE")}
+for c_ in CORRECTIONS:
+    if surv["recorded"] and c_["correction_id"] not in have:
+        gid = next((g.gap_id for g in ledger.gaps.values() if g.kind == c_["about_gap_kind"]), None)
+        reg.append("NOTE", {"kind": "CORRECTION", "experiment": GATE_NAME, "gap_id": gid, **c_})
+if surv["recorded"]:
+    L += ["", "## Corrections to earlier outputs (the registry is append-only; corrections are recorded as NOTE events)", ""] + [f"- **{c_['correction_id']}**: was: {c_['was']}. Now: {c_['is']}" for c_ in CORRECTIONS]
 OUT.write_text("\n".join(L) + "\n")
 reg.append("INTEGRITY_REPORT", {"experiment": GATE_NAME, "gate_open": bool(ok), "n_reasons": len(why), "spec_sha256": SPEC_SHA256, "dataset": DS,
                                "requirements": {r.rid: [None if r.measured is None else (bool(r.measured) if isinstance(r.measured, (bool, np.bool_)) else float(r.measured)), bool(r.passed)] for r in results}})
