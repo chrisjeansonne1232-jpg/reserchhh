@@ -264,14 +264,19 @@ if len(snap_files) and len(snap_files) == len(expected_dates):
                                     "share_of_excluded_spells_that_later_stop_trading": round(ended_ex, 3), "same_share_for_all_member_spells": round(ended_all, 3),
                                     "median_prior_60_session_raw_log_return_at_exclusion": round(float(np.median(prior)), 3) if prior else None, "n_prior": len(prior),
                                     "note": "exclusions remove names from the moment the data becomes ambiguous; this is a composition change, direction of the return bias NOT measured"},
-        "D_identity": {"glued_spells_total": int(len(glue)), "glued_spells_with_member_cells": int(glue["member_near_either"].sum()) if len(glue) else 0,
-                       "note": "spells that hold real bars near two PIT snapshot dates on which the ticker belonged to different FIGIs"},
+        "D_identity": {"glued_spells_total": int(len(glue)), "glued_spells_with_member_cells": int(glue["member_ever"].sum()) if len(glue) else 0,
+                       "of_which_name_also_changed_similarity_below_0.6": int(((glue["name_similarity"] < 0.6) & glue["member_ever"]).sum()) if len(glue) else 0,
+                       "member_cells_after_the_swap_window": {"lower_bound_from_first_snapshot_after": int(sum(int(member[int(r.session_hi):, int(r.spell)].sum()) for r in glue[glue["member_ever"]].itertuples())),
+                                                              "upper_bound_from_last_snapshot_before": int(sum(int(member[int(r.session_lo):, int(r.spell)].sum()) for r in glue[glue["member_ever"]].itertuples()))},
+                       "examples_name_changed": glue[glue["member_ever"] & (glue["name_similarity"] < 0.6)][["ticker", "name_before", "name_after"]].head(10).to_dict("records") if len(glue) else [],
+                       "note": "spells that hold real bars near two PIT snapshot dates on which the ticker belonged to different FIGIs. A FIGI change is NOT proof of a different issuer (renames and restructurings also change it), "
+                               "so the count is conservative; the name-change subset is indicative only. No V1 rule separates these series."},
         "E_instrument_mix": mix,
     }
     (AUD / "survivorship_quantification.json").write_text(json.dumps(surv, indent=1, default=str))
     log("survivorship:", json.dumps(surv["A_listed_but_no_bars"])[:300])
 else:
-    glue = pd.DataFrame(columns=["member_near_either"])
+    glue = pd.DataFrame(columns=["member_ever"])
     log(f"PIT snapshots incomplete ({len(snap_files)}/{len(expected_dates)}): residual survivorship NOT quantified")
 M["R8"] = bool(surv["recorded"])
 D["R8"] = "see 'Residual survivorship' section" if surv["recorded"] else f"PIT snapshots incomplete ({len(snap_files)}/{len(expected_dates)})"
@@ -306,7 +311,7 @@ for r in ren_w.itertuples():
         if member[max(0, s_ - 4):s_ + 5, c_].any():
             ren_member += 1
             break
-glued_members = int(glue["member_near_either"].sum()) if len(glue) else None
+glued_members = int(glue["member_ever"].sum()) if len(glue) else None
 E = {
     "scope": "not an input of DAILY_SWING_V1 (SPEC scope.not_used); the panel is built from daily bars only",
     "placeholder": f"member cells with volume<=0: {bad_vol} (R1); {cube_stats['placeholder_bars_not_cells']:,} placeholder bars were set aside and are never cells",

@@ -231,3 +231,18 @@ def test_gate_requires_the_limitation_to_be_recorded_and_failed_requirements_blo
     assert DailySwingGate.check(evaluate_requirements(PASSING), led, ACC)[0]
     ok, why = DailySwingGate.check(evaluate_requirements({**PASSING, "R5a": 3}), led, ACC)
     assert not ok and "R5a" in why[0]
+
+
+# ------------------------------------------------------------------ identity: one series across two FIGIs
+def test_glued_spell_detection_uses_pit_figis_and_names():
+    from edgelab.daily_swing_surv import glued_spells
+    rows = series("GEN", 0, 300)                                                          # ONE continuous series (glued): no 60-session gap
+    cube, _ = build_cube(frame(rows + series("SEP", 0, 100, seed=5) + series("SEP", 200, 100, seed=6)), SESS)   # SEP: a real gap of 100 sessions -> two spells
+    member = np.zeros((cube.T, cube.S), dtype=bool); member[100:250, list(cube.spell_ticker).index("GEN")] = True
+    snaps = pd.DataFrame([
+        (SESS[50], "GEN", "FIGI_A", "Genesis Healthcare, Inc."), (SESS[250], "GEN", "FIGI_B", "Gen Digital Inc. Common Stock"),
+        (SESS[50], "SEP", "FIGI_C", "Separated One Inc"), (SESS[250], "SEP", "FIGI_D", "Separated Two Inc")],
+        columns=["snapshot_date", "ticker", "composite_figi", "name"])
+    g = glued_spells(snaps, cube, member, near=20)
+    assert g["ticker"].tolist() == ["GEN"]                                                # SEP's two issuers live in two spells: correctly NOT glued
+    assert bool(g.iloc[0]["member_ever"]) and g.iloc[0]["name_similarity"] < 0.6

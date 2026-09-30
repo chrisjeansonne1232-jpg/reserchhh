@@ -81,6 +81,9 @@ def glued_spells(snaps: pd.DataFrame, cube, member_raw: np.ndarray, near: int = 
     cols_by_ticker: dict[str, list[int]] = {}
     for c, t in enumerate(cube.spell_ticker):
         cols_by_ticker.setdefault(str(t), []).append(c)
+    import re
+    norm = lambda x: set(re.sub(r"[^a-z0-9 ]", "", re.sub(r"\b(inc|corp|corporation|co|ltd|plc|holdings|company|common stock|ordinary shares|new)\b", "", str(x).lower())).split())
+    names = {(r.ticker, r.composite_figi): r.name for r in snaps.itertuples()}
     s = snaps.dropna(subset=["composite_figi"])
     multi = s.groupby("ticker")["composite_figi"].nunique()
     rows = []
@@ -95,9 +98,13 @@ def glued_spells(snaps: pd.DataFrame, cube, member_raw: np.ndarray, near: int = 
                 n1 = cs[min(cube.T, s1 + near + 1), c] - cs[max(0, s1 - near), c]
                 n2 = cs[min(cube.T, s2 + near + 1), c] - cs[max(0, s2 - near), c]
                 if n1 > 0 and n2 > 0:
-                    rows.append({"ticker": tk, "figi_before": figs[i], "figi_after": figs[i + 1], "last_snapshot_before": d1, "first_snapshot_after": d2, "spell": int(c),
-                                 "member_near_either": bool(member_raw[s1, c] or member_raw[s2, c])})
-    return pd.DataFrame(rows, columns=["ticker", "figi_before", "figi_after", "last_snapshot_before", "first_snapshot_after", "spell", "member_near_either"])
+                    a_, b_ = names.get((tk, figs[i]), ""), names.get((tk, figs[i + 1]), "")
+                    na, nb = norm(a_), norm(b_)
+                    rows.append({"ticker": tk, "figi_before": figs[i], "figi_after": figs[i + 1], "name_before": a_, "name_after": b_,
+                                 "name_similarity": round(len(na & nb) / max(1, len(na | nb)), 2), "last_snapshot_before": d1, "first_snapshot_after": d2, "spell": int(c),
+                                 "session_lo": s1, "session_hi": s2, "member_ever": bool(member_raw[:, c].any())})
+    return pd.DataFrame(rows, columns=["ticker", "figi_before", "figi_after", "name_before", "name_after", "name_similarity", "last_snapshot_before", "first_snapshot_after",
+                                       "spell", "session_lo", "session_hi", "member_ever"])
 
 
 ADS_OR_FUND = r"American Depositary|\bADS\b|\bADR\b|\bFund\b|\bFd\b|Closed[- ]End|\bETF\b|\bETN\b"
