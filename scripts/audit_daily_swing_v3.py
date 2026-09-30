@@ -134,7 +134,8 @@ cuts = sorted(int(x) for x in rng.choice(np.arange(t0 + 150, T - 5), 3, replace=
 def _cells(cb, m, upto):
     """member cells as bar content (session, open, close, volume): a ticker label is not part of the cell"""
     r_, c_ = np.nonzero(m[:upto + 1])
-    return set(zip(r_.tolist(), np.round(cb.open[r_, c_], 6).tolist(), np.round(cb.close[r_, c_], 6).tolist(), cb.volume[r_, c_].tolist()))
+    f = lambda a: np.nan_to_num(np.round(a[r_, c_].astype(float), 6), nan=-1.0).tolist()      # NaN (member cell without a real bar) must compare equal to itself
+    return set(zip(r_.tolist(), f(cb.open), f(cb.close), f(cb.volume)))
 
 
 diffs_raw, worst_share, per_cut = 0, 0.0, []
