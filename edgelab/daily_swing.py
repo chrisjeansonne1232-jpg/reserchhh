@@ -164,7 +164,7 @@ def _prev_close(close: np.ndarray, col: int, s: int, max_back: int = 10) -> floa
     return float(close[lo + ix[-1], col]) if len(ix) else float("nan")
 
 
-def classify_claim(cube: Cube, col_candidates: list[int], s0: int, multiplier: float) -> dict:
+def classify_claim(cube: Cube, col_candidates: list[int], s0: int, multiplier: float, tol_floor: float = 0.05) -> dict:
     """Empirical test of ONE claim: does the raw overnight change match the claimed price multiplier? See SPEC['split_resolution'] for the rules."""
     lo, hi = max(1, s0 - WIN), min(cube.T - 1, s0 + WIN)
     best = None
@@ -177,7 +177,7 @@ def classify_claim(cube: Cube, col_candidates: list[int], s0: int, multiplier: f
     c = best[0]
     lnm = float(np.log(multiplier))
     sig, nobs = _sigma(cube.open, cube.close, c, lo)
-    tol = max(4 * sig, 0.05)
+    tol = max(4 * sig, tol_floor)                     # V1/V2: floor 0.05. V3 passes a wider floor for claims BOTH providers agree on (reverse-split ex-dates are noisy)
     rows = []
     for s in range(lo, hi + 1):
         if not np.isfinite(cube.open[s, c]):
@@ -209,8 +209,8 @@ def classify_claim(cube: Cube, col_candidates: list[int], s0: int, multiplier: f
     return {**base, "verdict": "AMBIGUOUS", "reason": f"a jump exists (max |ln R|={err_none.max():.3f}) that does not match the claim"}
 
 
-def resolve_claims(claims: pd.DataFrame, cube: Cube) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Per-claim verdicts, then per-EVENT resolution. Returns (claims_with_verdicts, events)."""
+def resolve_claims(claims: pd.DataFrame, cube: Cube, agreed_tol_floor: float | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Per-claim verdicts, then per-EVENT resolution. Returns (claims_with_verdicts, events). agreed_tol_floor=None reproduces V1/V2 exactly."""
     by_ticker: dict[str, list[int]] = {}
     for c, t in enumerate(cube.spell_ticker):
         by_ticker.setdefault(str(t), []).append(c)
@@ -218,7 +218,8 @@ def resolve_claims(claims: pd.DataFrame, cube: Cube) -> tuple[pd.DataFrame, pd.D
     for r in claims.itertuples():
         s0 = int(cube.sessions.searchsorted(r.date))
         s0 = min(s0, cube.T - 1)
-        v = classify_claim(cube, by_ticker.get(r.ticker, []), s0, r.price_multiplier)
+        floor = agreed_tol_floor if (agreed_tol_floor is not None and r.source == "both") else 0.05
+        v = classify_claim(cube, by_ticker.get(r.ticker, []), s0, r.price_multiplier, floor)
         res.append({"claim_id": r.claim_id, "s0": s0, **v})
     cl = claims.merge(pd.DataFrame(res), on="claim_id")
     # events: same ticker + spell, claimed sessions within WIN of each other

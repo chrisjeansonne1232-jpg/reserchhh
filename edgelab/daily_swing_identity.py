@@ -67,7 +67,7 @@ def identity_mask(cube, bnd: pd.DataFrame, lookback: int = LOOK, part: str = "al
     return mask
 
 
-def timeline_violations(cube, member: np.ndarray, obs: pd.DataFrame, lookback: int = LOOK) -> tuple[int, pd.DataFrame]:
+def timeline_violations(cube, member: np.ndarray, obs: pd.DataFrame, lookback: int = LOOK, ambiguous_ok: bool = False) -> tuple[int, pd.DataFrame]:
     """Independent cross-check of the mask. Per ticker, give every session an issuer label from the cik observation timeline: the key when the observations on
     both sides agree, AMBIGUOUS when they differ (the hand-over is somewhere between), the first/last key outside the observed range. Then count member cells whose
     window [t-lookback, t] (only sessions on which the spell has a real bar) carries more than one label or an AMBIGUOUS one. Uses cik only (fallback tickers are
@@ -100,7 +100,11 @@ def timeline_violations(cube, member: np.ndarray, obs: pd.DataFrame, lookback: i
                 bad = 0
                 for t in ts:
                     w = np.flatnonzero(real[max(0, t - lookback): t + 1, c]) + max(0, t - lookback)
-                    if len(w) and (len(set(codes[w])) > 1 or amb[w].any()):
+                    if len(w) and ambiguous_ok:              # V3: sessions inside an unresolved window are RETAINED (declared); only two KNOWN, different labels in one lookback count
+                        known = codes[w][~amb[w]]
+                        if len(set(known)) > 1:
+                            bad += 1
+                    elif len(w) and (len(set(codes[w])) > 1 or amb[w].any()):
                         bad += 1
                 if bad:
                     rows.append({"ticker": tk, "spell": c, "key": key, "violating_member_cells": bad})
