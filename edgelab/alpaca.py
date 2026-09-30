@@ -66,7 +66,7 @@ class AlpacaData:
                           {"timeframe": timeframe, "start": s, "end": e, "adjustment": "raw", "limit": limit, "sort": "asc"})
         rows = [{"symbol": sym, **r} for sym, rs in raw.items() for r in rs]
         df = pd.DataFrame(rows, columns=["symbol", "t", "o", "h", "l", "c", "v", "vw", "n"])
-        df["t"] = pd.to_datetime(df["t"], utc=True)
+        df["t"] = pd.to_datetime(df["t"], utc=True, format="ISO8601")
         return df.rename(columns={"o": "open", "h": "high", "l": "low", "c": "close", "v": "volume", "vw": "vwap", "n": "trades"})
 
     # ---------------------------------------------------------------- ticks
@@ -80,7 +80,7 @@ class AlpacaData:
             if not token or (max_rows and len(rows) >= max_rows):
                 break
         df = pd.DataFrame(rows, columns=["t", "x", "p", "s", "c", "i", "z"])
-        df["t"] = pd.to_datetime(df["t"], utc=True)
+        df["t"] = pd.to_datetime(df["t"], utc=True, format="ISO8601")
         return df.rename(columns={"x": "exchange", "p": "price", "s": "size", "c": "conditions", "i": "trade_id", "z": "tape"})
 
     def quotes(self, symbol: str, start, end, limit: int = 10000, max_rows: int | None = None) -> pd.DataFrame:
@@ -93,7 +93,7 @@ class AlpacaData:
             if not token or (max_rows and len(rows) >= max_rows):
                 break
         df = pd.DataFrame(rows, columns=["t", "ax", "ap", "as", "bx", "bp", "bs", "c", "z"])
-        df["t"] = pd.to_datetime(df["t"], utc=True)
+        df["t"] = pd.to_datetime(df["t"], utc=True, format="ISO8601")
         return df.rename(columns={"ax": "ask_exchange", "ap": "ask", "as": "ask_size", "bx": "bid_exchange", "bp": "bid", "bs": "bid_size", "c": "conditions", "z": "tape"})
 
     # ---------------------------------------------------------------- corporate actions (renames, splits)

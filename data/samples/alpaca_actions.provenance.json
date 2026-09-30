@@ -1,0 +1,48 @@
+{
+ "retrieved_at_utc": "2026-09-30T10:41:55.265962+00:00",
+ "window": [
+  "2016-01-01",
+  "2026-09-29"
+ ],
+ "transformations": "none",
+ "splits": {
+  "n": 6532,
+  "columns": [
+   "cusip",
+   "ex_date",
+   "id",
+   "new_rate",
+   "old_rate",
+   "process_date",
+   "symbol",
+   "_type",
+   "new_cusip",
+   "old_cusip",
+   "payable_date",
+   "record_date",
+   "due_bill_redemption_date",
+   "new_symbol"
+  ],
+  "types": "forward_split,reverse_split"
+ },
+ "dividends": {
+  "n": 365067,
+  "columns": [
+   "cusip",
+   "ex_date",
+   "foreign",
+   "id",
+   "process_date",
+   "rate",
+   "special",
+   "symbol",
+   "_type",
+   "payable_date",
+   "record_date",
+   "due_bill_off_date",
+   "due_bill_on_date",
+   "sub_type"
+  ],
+  "types": "cash_dividend"
+ }
+}

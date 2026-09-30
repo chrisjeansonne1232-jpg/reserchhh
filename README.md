@@ -11,4 +11,7 @@ Status: **infrastructure built and self-tested; strategy discovery is NOT starte
 * `edgelab/evaluator.py` frozen-threshold evaluator, single-shot locked OOS, public-verdict-only output
 * `edgelab/integrity.py` calendar-aware integrity checks, gap ledger, discovery gate
 * `selftest/` intentionally flawed strategies; `tests/` 69+ tests (`python -m pytest`)
+* `edgelab/alpaca.py` primary price source (Alpaca free SIP, raw, historical-only, refuses windows newer than 15 min); `edgelab/massive.py` free-tier reference/splits/cross-validation;
+  `edgelab/providers.py` env-only credentials + redaction. `scripts/ingest_*.py` and `scripts/build_integrity_report.py` reproduce the audit (raw data is git-ignored).
+* Integrity checks added: ticker renames / symbol re-use, rename-feed quality, delisted-name coverage, cross-provider daily/minute/splits, OHLC validity, zero-volume placeholders, tick sanity.
 * No real-money execution exists anywhere in this code.

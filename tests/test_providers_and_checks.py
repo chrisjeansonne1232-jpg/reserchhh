@@ -9,7 +9,7 @@ import pytest
 
 from edgelab import providers
 from edgelab.alpaca import AlpacaData
-from edgelab.integrity import (AMBIGUOUS, MATERIAL, MINOR, MarketCalendar, check_cross_provider_daily, check_daily_ohlc, check_cross_provider_splits, aggregate_gaps, Gap, GapLedger, check_delisted_coverage,
+from edgelab.integrity import (AMBIGUOUS, MATERIAL, MINOR, MarketCalendar, check_cross_provider_daily, check_daily_ohlc, check_zero_volume_bars, check_cross_provider_splits, aggregate_gaps, Gap, GapLedger, check_delisted_coverage,
                                check_rename_feed, check_ticker_renames, check_ticks)
 from edgelab.providers import MissingCredentials, ProviderError, RecentDataRefused, redact
 
@@ -317,3 +317,51 @@ def test_split_tables_agree_and_disagree():
     gaps, st = check_cross_provider_splits(a, b, "d", ("2016-01-01", "2026-09-30"), "massive", "alpaca")
     assert st["agree"] == 1 and st["only_in_massive"] == 1 and st["only_in_alpaca"] == 2       # C is future-dated: out of window, not compared
     assert kinds(gaps) == ["SPLIT_TABLES_DISAGREE"]
+
+
+def test_mixed_timestamp_precision_is_parsed_per_element(creds, monkeypatch):
+    a = AlpacaData(now="2026-09-30T12:00:00Z")
+    rows = [{"t": "2016-11-25T14:30:04Z", "x": "P", "p": 1.0, "s": 1, "c": [], "i": 1, "z": "C"},
+            {"t": "2016-11-25T14:30:04.002Z", "x": "P", "p": 1.0, "s": 1, "c": [], "i": 2, "z": "C"}]
+    monkeypatch.setattr(a.http, "get_json", lambda *a_, **k: {"trades": {"AAA": rows}, "next_page_token": None})
+    df = a.trades("AAA", "2016-11-25T14:30:00Z", "2016-11-25T14:31:00Z")
+    assert df["t"].notna().all() and df["t"].iloc[1] - df["t"].iloc[0] == pd.Timedelta(milliseconds=2)
+
+
+def test_tick_check_reports_measured_venue_mix_not_an_assumption():
+    t0 = pd.Timestamp("2025-07-03 14:30", tz="UTC")
+    q = pd.DataFrame({"t": [t0 + pd.Timedelta(milliseconds=i) for i in range(4)], "bid": [10, 10.05, 10, 10], "ask": [10.01, 10.0, 10.01, 10.02],
+                      "bid_exchange": ["K", "K", "P", "Q"], "ask_exchange": ["P", "P", "P", "Q"], "bid_size": 1, "ask_size": 1})
+    gaps, st = check_ticks(None, q, "d", "AAA", "2025-07-03")
+    assert st["quotes_bid_ask_venue_differ_frac"] == 0.5 and st["quotes_crossed"] == 1 and st["distinct_bid_venues"] == 3
+    assert "cannot prove it is the official NBBO" in gaps[0].detail and "per-exchange quote stream, not an NBBO" not in gaps[0].detail
+
+
+def test_zero_volume_placeholders_detected_for_illiquid_names_too():
+    d = daily_frame(20)
+    d.loc[d["ticker"] == "BBB", "volume"] = 300                                             # illiquid: check_stale_daily would skip this ticker
+    idx = d[d["ticker"] == "BBB"].index[5:8]
+    prev = d.loc[idx[0] - 1, "close"]
+    d.loc[idx, ["open", "high", "low", "close"]] = prev
+    d.loc[idx, "volume"] = 0
+    gaps, st = check_zero_volume_bars(d, "d")
+    assert st["zero_volume_bars"] == 3 and st["zero_volume_equal_previous_close"] == 3 and st["tickers_affected"] == 1   # a chain of carry-forwards: each equals the bar before it
+    assert kinds(gaps, MATERIAL) == ["ZERO_VOLUME_PLACEHOLDER_BARS"]
+    assert check_zero_volume_bars(daily_frame(20), "d")[0] == []
+
+
+def test_rename_with_prior_history_on_both_symbols_is_ambiguous_not_backmapped():
+    nc = NC[NC["new_symbol"] == "NEWCO"]
+    gaps, st = check_ticker_renames(nc, obs([("NEWCO", "2019-01-02", "2026-09-29"), ("OLDCO", "2016-01-04", "2021-02-26")]), "d")
+    assert kinds(gaps) == ["RENAME_TARGET_SYMBOL_HAS_PRIOR_HISTORY"] and gaps[0].severity == AMBIGUOUS and st["backmapped"] == 0
+
+
+def test_long_placeholder_runs_reveal_dead_period_between_issuers():
+    d = daily_frame(80)
+    idx = d[d["ticker"] == "AAA"].index[10:75]                       # 65 consecutive sessions bridged by placeholders (ticker re-use)
+    d.loc[idx, ["open", "high", "low", "close"]] = d.loc[idx[0] - 1, "close"]
+    d.loc[idx, "volume"] = 0
+    gaps, st = check_zero_volume_bars(d, "d")
+    r = st["placeholder_runs_ge_min_run"]
+    assert r["runs"] == 1 and r["tickers"] == 1 and "AAA" in r["examples"][0] and "(65 sessions)" in r["examples"][0]
+    assert "derive alive from volume > 0" in gaps[0].detail

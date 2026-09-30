@@ -1,21 +1,25 @@
-# Research-environment audit (2026-09-30)
+# Research-environment audit (2026-09-30, updated after the Alpaca switch)
+
+Primary price source: **Alpaca free Market Data API** (SIP feed, `adjustment=raw`, historical-only: `end` must be >= 15 min ago; the client refuses anything newer instead of clipping).
+**Massive free tier** is kept for splits, reference tickers (incl. delisted) and cross-validation only. All figures below were measured on 2026-09-30; details and the gap ledger are in `docs/DATA_INTEGRITY_REPORT.md`.
+Gate requirements are unchanged and the discovery gate is still **BLOCKED**.
 
 | # | Question | Finding (measured, not assumed) |
 |---|---|---|
-| 1 | Data available | Massive via MCP connector: stocks aggregates (daily/minute), reference tickers (incl. delisted), splits, dividends, news, analyst ratings (partner), corporate events (partner), treasury yields, options/crypto/FX/futures/indices endpoints. Plus reachable from sandbox: SEC EDGAR, FRED, Nasdaq Trader symbol directory, Yahoo chart API (unofficial). |
-| 2 | Historical periods | **Prices: ~2 years only** (2024-12 OK, 2024-09 / 2022 / 2010 / 2000 → NOT_ENTITLED). News: back to 2016 (first article seen 2016-06-22) but there are no entitled prices to test pre-2024 news against. |
+| 1 | Data available | **Alpaca (primary):** daily + minute bars, trades, quotes, corporate actions (splits, dividends, name changes), all SIP, 2016-01 onward. **Massive (secondary):** reference tickers (active + inactive common stock), splits, aggregates for ~2 years only, news, treasury yields. Also reachable, not ingested: SEC EDGAR, FRED, Nasdaq Trader symbol directory, Yahoo chart API. |
+| 2 | Historical periods | **Daily: 2016-01-04..2026-09-29 ingested** (14,521,836 raw bars, 10,043 of 10,387 requested symbols, 2,700 XNYS sessions, all present). Minute/trade/quote history exists back to 2016 at the provider but only a stratified **sample** is on disk. Massive aggregates: ~2 years (2016 -> HTTP 403). Alpaca rename feed is sparse before 2019. |
 | 3 | Markets | US equities (calendar XNYS). Other markets are refused by `MarketCalendar` until a calendar is registered. |
-| 4 | Securities | Reference list includes delisted names with `delisted_utc` (e.g. AABA 2019-10-07, LEHMAN WTS 2008-02-11). |
-| 5 | Timestamps | Daily bar `t` = midnight America/New_York (verified 56/56). Minute bar `t` = window start, ms, UTC. News `published_utc` minute resolution only; no vendor/system receipt time. |
-| 6 | Corporate actions | Splits (with `historical_adjustment_factor`) and dividends endpoints. `adjusted=false` verified truly unadjusted (ORLY 15:1). Splits table includes future-dated actions (not PIT as returned). |
-| 7 | Delisted securities | Present in reference list. Terminal/bankruptcy returns NOT provided → engine raises `DataGapError` rather than assume 0. |
-| 8 | Historical news | Yes (`/v2/reference/news`), multi-publisher, syndication present; no revision history. |
-| 9 | PIT fundamentals | **Not available from Massive** (`/vX/reference/financials` → 410; replacements NOT_ENTITLED). SEC EDGAR is reachable (acceptance timestamps) — a different provider, must be declared per experiment. |
-| 10 | Bid/ask / depth | **Not entitled** (`/v3/quotes`, NBBO ticks). Spreads must be assumed. |
-| 11 | Storage | Local disk ~250 GB nominal (30 GB free), DuckDB/pyarrow/SQLite installed. Registry: append-only, hash-chained SQLite + JSONL mirror. |
-| 12 | Compute | 4 vCPU, 15 GB RAM, Python 3.11, no GPU. Ample for daily-bar research; not for tick-level. |
-| 13 | Connectors | Massive (data), Robinhood (read tools exist; **not used**, no execution), SEC/FRED via HTTPS. No Massive API key in the environment. |
-| 14 | Missing | Bulk export path for Massive; NBBO; PIT fundamentals; long price history; news receipt timestamps; delisting terminal returns; halts/LULD list. |
-| 15 | Cannot be used | Real-money execution (forbidden by protocol). Yahoo/other providers may not silently substitute for Massive. Massive data licence terms not reviewed here — confirm before redistributing samples. |
+| 4 | Securities | Massive master: 5,323 active + 6,625 inactive common stocks. 4,863 were delisted inside 2016..2026-09; Alpaca returned bars for 4,587 (94.3%) and **none for 276 (5.7%)**, above the 2% tolerance: the panel is survivorship-biased, worst for 2016-2018 delistings (~90-91% covered). |
+| 5 | Timestamps | Alpaca daily `t` = 00:00 America/New_York in UTC (04:00Z EDT / 05:00Z EST); minute `t` = window start UTC; tick times are ISO strings with **mixed precision** (`...:04Z` and `...:04.002Z` in the same response; parse per element). Massive daily `t` = midnight America/New_York (ms). News `published_utc` is minute-resolution with no receipt time. |
+| 6 | Corporate actions | Alpaca `raw` is genuinely unadjusted (ORLY 1348.10 -> 91.71, NVDA 1208.88 -> 121.79, AAPL 499.23 -> 129.04, TSLA 891.29 -> 296.07). Splits: Massive 3,713 vs Alpaca 3,106 in-universe events; they agree on 2,875, disagree on ~27% (about 15% for integer-ratio splits only). Dividends: Alpaca 365,067 rows ingested, not price-validated. Massive splits include future-dated actions (not point-in-time). |
+| 7 | Delisted securities | Present in the Massive master with `delisted_utc` (201 inactive names have none). **No terminal/bankruptcy returns from either provider** (4,863 names): engine raises `DataGapError` rather than assume 0. Bars extend past the delisting date for 284 names and stop early for 24. |
+| 8 | Historical news | Unchanged: Massive `/v2/reference/news`, multi-publisher, no receipt/revision timestamps. Not touched in this update. |
+| 9 | PIT fundamentals | Unchanged: not available from Massive; SEC EDGAR has acceptance timestamps but is a different provider and must be declared per experiment. |
+| 10 | Bid / ask / depth | **Now accessible** (Alpaca SIP quotes, 2016+) but only sampled (AAPL/ORLY, 2 minutes at the open, 11 sessions). In the AAPL sample bid and ask venues differ in 68-84% of quotes (consolidated-style; not proven to be the official NBBO); crossed quotes 0-0.6%; median spread 1.1-8.7 bps. No observed-spread series exists for the universe, so spreads are still assumed. |
+| 11 | Storage | ~30.9 GB free of a nominal 252 GB allowance; DuckDB/pyarrow installed. Measured parquet cost: 42 B per minute-bar row. Minute bars <= 10.3bn rows (upper bound from daily trade counts) ~ <= 435 GB; trades = 144bn rows ~ 2.2 TB. Registry: append-only, hash-chained SQLite + JSONL mirror (now restored from the mirror in a fresh checkout). |
+| 12 | Compute | 4 vCPU, 15 GB RAM, Python 3.11, no GPU. Full daily audit runs in ~3.5 min; not suitable for tick-level work. |
+| 13 | Connectors / rate limits | Alpaca: 200 req/min (paced at 150), 10,000 rows/page, multi-symbol (<=100). Massive: **5 req/min**, bearer-header auth. Robinhood: read tools exist, **not used**, no execution. Keys are read from the environment only, sent as headers only, and redacted from all errors. |
+| 14 | Missing | NBBO series for the universe; minute/tick history on disk; PIT fundamentals; news receipt timestamps; delisting terminal returns; halts/LULD list; permanent-ID (FIGI) keyed prices; rename events before 2019; list dates in the security master. |
+| 15 | Cannot be used / must be handled | Real-money execution (forbidden by protocol). **Alpaca daily bars contain 544,945 zero-volume carry-forward placeholder bars (3.75%, 3,718 tickers)**, including multi-year runs that bridge dead periods: never derive `alive` from bar existence, use volume > 0. Alpaca history is keyed by the *current* symbol (FB returns nothing, META returns Facebook from 2016): do not join on ticker. Yahoo/other providers may not silently substitute for Alpaca. Provider licence terms not reviewed here: confirm before redistributing samples. |
 
-Isolation capability verified here: root + `unshare(CLONE_NEWNET)` + uid drop to `nobody` work; a container/VM would be stronger (residual risk documented in `edgelab/sandbox.py`).
+Isolation capability verified earlier: root + `unshare(CLONE_NEWNET)` + uid drop to `nobody` work; a container/VM would be stronger (residual risk documented in `edgelab/sandbox.py`).

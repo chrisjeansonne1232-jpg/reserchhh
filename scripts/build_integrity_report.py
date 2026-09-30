@@ -19,7 +19,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from edgelab.integrity import (AMBIGUOUS, MATERIAL, MINOR, EXPECTED, DiscoveryGate, ExperimentRequirements, Gap, GapLedger, IntegrityReport, MarketCalendar,
                                aggregate_gaps, check_corporate_actions, check_cross_provider_daily, check_cross_provider_splits, check_daily_ohlc,
-                               check_daily_sessions, check_delisted_coverage, check_duplicates, check_news, check_rename_feed, check_stale_daily,
+                               check_daily_sessions, check_delisted_coverage, check_zero_volume_bars, check_duplicates, check_news, check_rename_feed, check_stale_daily,
                                check_ticker_renames)
 from edgelab.registry import Registry
 
@@ -42,7 +42,7 @@ extra_md: list[str] = []          # additional report sections
 
 
 def by_kind(kind: str) -> Gap:
-    return next(g for g in ledger.gaps.values() if g.kind == kind)
+    return next(g for g in ledger.gaps.values() if g.kind == kind and g.gap_id != "d459b7af9edd")
 
 
 # ============================================================================ A. previous Massive-connector samples (unchanged historical facts)
@@ -128,18 +128,23 @@ st_sess["gap_detail_rows"] = int(len(det))
 g = check_duplicates(daily, ["ticker", "date"], DS_A); ledger.add(g)
 g = check_stale_daily(daily, DS_A); agg, det = aggregate_gaps(g, DS_A); ledger.add(agg); det.to_csv(AUDIT / "daily_stale_detail.csv.gz", index=False) if len(det) else None
 g, st_ohlc = check_daily_ohlc(daily, DS_A); ledger.add(g)
+g, st_zv = check_zero_volume_bars(daily, DS_A); ledger.add(g)
 
 sp_m = pd.read_parquet(RAW / "massive_splits_since_2016.parquet")
 sp_m = sp_m[["ticker", "execution_date", "split_from", "split_to"]]
+UNIVERSE = set(master["ticker"])
+n_sp_all = len(sp_m)
+sp_m = sp_m[sp_m["ticker"].isin(UNIVERSE)]          # Massive's table also covers funds/ETFs: audit the research universe only
 sp_asof = sp_m[pd.to_datetime(sp_m["execution_date"]) <= LAST]
 sp_future = int(len(sp_m) - len(sp_asof))
 ref_ca = ref[ref["delist_date"].notna() & (ref["delist_date"] >= pd.Timestamp(START))]
 g, st_ca_u = check_corporate_actions(daily, sp_asof, DS_A, ref=ref_ca)
 agg, det = aggregate_gaps(g, DS_A); ledger.add(agg); det.to_csv(AUDIT / "daily_corporate_action_gaps_detail.csv.gz", index=False)
 st_ca_u["massive_splits_future_dated_excluded"] = sp_future
+st_ca_u["massive_splits_out_of_universe_excluded"] = int(n_sp_all - len(sp_m))
 rep.checks_run += ["calendar", "sessions", "duplicates", "stale", "corporate_actions"]
 rep.stats["alpaca_daily_universe"] = {"dataset_id": DS_A, "bars": int(len(daily)), "symbols_returned": int(daily["ticker"].nunique()), "symbols_requested": int(len(requested)),
-                                      "sessions": st_sess, "ohlc": st_ohlc, "corporate_actions_vs_massive_splits": st_ca_u,
+                                      "sessions": st_sess, "ohlc": st_ohlc, "zero_volume_placeholder_bars": st_zv, "corporate_actions_vs_massive_splits": st_ca_u,
                                       "provider_timestamp_convention": prov_d["provider_timestamp_convention"]}
 
 # ---------------------------------------------------------------- B2. cross-provider: daily bars (sample) and split tables (all)
@@ -150,15 +155,23 @@ if xv_path.exists():
     prim = daily[daily["ticker"].isin(xv["ticker"].unique()) & (daily["date"] >= xp["start"])][["ticker", "date", "open", "high", "low", "close", "volume"]]
     g, st_x = check_cross_provider_daily(prim, xv[["ticker", "date", "open", "high", "low", "close", "volume"]], f"xval_daily_alpaca_vs_massive_{xp['start']}_{xp['end']}")
     ledger.add(g)
+    mm = prim.merge(xv[["ticker", "date", "close", "volume"]], on=["ticker", "date"], suffixes=("_a", "_m"))
+    bad = mm[(mm["close_a"] / mm["close_m"] - 1).abs() > 0.005]
+    st_x["mismatch_attribution"] = {"rows_mismatching_close": int(len(bad)), "by_ticker": bad.groupby("ticker").size().sort_values(ascending=False).head(4).to_dict(),
+                                    "of_which_alpaca_volume_zero": int((bad["volume_a"] <= 0).sum()), "of_which_massive_volume_positive": int((bad["volume_m"] > 0).sum())}
     rep.stats["cross_provider_daily_alpaca_vs_massive"] = {**st_x, "sample": xp["sample"], "window": [xp["start"], xp["end"]]}
     rep.checks_run += ["cross_provider"]
 sp_a_path = RAW / "alpaca_splits.parquet"
 if sp_a_path.exists():
     sa = pd.read_parquet(sp_a_path)
     sa = pd.DataFrame({"ticker": sa["symbol"], "execution_date": sa["ex_date"], "split_from": sa["old_rate"], "split_to": sa["new_rate"]})
-    universe = set(master["ticker"])                                                    # Massive's table also covers funds/ETFs: compare the research universe only
-    g, st_s = check_cross_provider_splits(sp_m[sp_m["ticker"].isin(universe)], sa[sa["ticker"].isin(universe)], f"xval_splits_massive_vs_alpaca_{START}_{END}", (START, str(LAST.date())), "massive", "alpaca")
+    sa = sa[sa["ticker"].isin(UNIVERSE)]
+    g, st_s = check_cross_provider_splits(sp_m, sa, f"xval_splits_massive_vs_alpaca_{START}_{END}", (START, str(LAST.date())), "massive", "alpaca")
     ledger.add(g)
+    il = lambda x: ((x["split_to"] / x["split_from"] - (x["split_to"] / x["split_from"]).round()).abs() < 1e-3) | ((x["split_from"] / x["split_to"] - (x["split_from"] / x["split_to"]).round()).abs() < 1e-3)
+    _, st_int = check_cross_provider_splits(sp_m[il(sp_m)], sa[il(sa)], "subset", (START, str(LAST.date())), "massive", "alpaca")
+    st_s["integer_ratio_subset"] = {k: st_int[k] for k in ("n_massive", "n_alpaca", "agree", "only_in_massive", "only_in_alpaca")}
+    st_s["fractional_ratio_events"] = {"massive": int(len(sp_m) - il(sp_m).sum()), "alpaca": int(len(sa) - il(sa).sum())}
     rep.stats["cross_provider_splits_massive_vs_alpaca"] = st_s
 
 # ---------------------------------------------------------------- B3. ticker renames + rename-feed quality + delisted coverage
@@ -198,16 +211,22 @@ horizon_ok = observed["first_date"].min() <= pd.Timestamp("2016-01-08") and st_s
 frac_dl = st_dl["delisted_missing_frac"]
 sizing = {}
 if isum:
-    bpt = {}
-    for r in isum["sessions"]:
-        for tk, n in r["per_ticker_bars"].items():
-            bpt.setdefault(tk, []).append(n)
-    mean_bars = float(np.mean([np.mean(v) for v in bpt.values()])) if bpt else float("nan")
-    total_trades = float(daily["trades"].sum())
-    sizing = {"symbol_sessions_with_daily_bar": int(len(daily)), "mean_minute_bars_per_symbol_session_in_sample": round(mean_bars, 1),
-              "estimated_total_minute_bars": float(len(daily) * mean_bars), "total_trades_from_daily_bar_counts": total_trades,
-              "pages_at_10k_rows_minute": float(len(daily) * mean_bars / 1e4), "pages_at_10k_rows_trades": total_trades / 1e4,
-              "days_at_150_req_per_min_minute": float(len(daily) * mean_bars / 1e4 / 150 / 60 / 24), "days_at_150_req_per_min_trades": total_trades / 1e4 / 150 / 60 / 24}
+    import shutil
+    bpr = {}
+    for kind in ("minute", "trades", "quotes"):
+        fs = list((RAW / "alpaca_intraday").glob(f"{kind}_*.parquet"))
+        rows_ = sum(len(pd.read_parquet(f)) for f in fs)
+        bpr[kind] = round(sum(f.stat().st_size for f in fs) / max(1, rows_), 1)
+    tr = daily["trades"].clip(lower=0)
+    ub_min = float(np.minimum(tr, 960).sum())                          # a minute bar needs >=1 trade and there are <=960 minutes in 04:00-20:00 ET
+    total_trades = float(tr.sum())                                     # exact: sum of per-bar trade counts
+    free = shutil.disk_usage(ROOT).free
+    sizing = {"symbol_sessions_with_daily_bar": int(len(daily)), "bytes_per_row_measured_parquet": bpr,
+              "minute_rows_upper_bound_sum_min_trades_960": ub_min, "minute_gb_upper_bound": ub_min * bpr["minute"] / 1e9,
+              "minute_days_pulling_upper_bound_150rpm_10k_rows": ub_min / 1e4 / 150 / 60 / 24,
+              "trades_rows_total": total_trades, "trades_gb_at_measured_bytes": total_trades * bpr["trades"] / 1e9,
+              "trades_days_pulling_150rpm_10k_rows": total_trades / 1e4 / 150 / 60 / 24, "free_disk_gb": round(free / 1e9, 1),
+              "minute_true_row_count_fraction_that_would_fit_disk": free / bpr["minute"] / ub_min}
     rep.stats["free_tier_feasibility"] = sizing
 
 if horizon_ok:
@@ -218,6 +237,13 @@ if horizon_ok:
     ledger.resolve(by_kind("NO_BULK_EXPORT_PATH").gap_id,
                    f"RESOLVED for daily bars and reference data: keys present in the environment; REST bulk-ingested {len(daily):,} daily bars (Alpaca), {prov_m['n_active'] + prov_m['n_inactive']:,} "
                    "security-master rows and the full splits table (Massive). NOT resolved for minute bars/ticks (see MINUTE_AND_TICK_HISTORY_NOT_MATERIALISED).")
+qsum = ""
+if isum:
+    qs = [r["ticks_first_2min_of_open"]["AAPL"] for r in isum["sessions"] if r["ticks_first_2min_of_open"].get("AAPL", {}).get("n_quotes")]
+    dif = [q["quotes_bid_ask_venue_differ_frac"] for q in qs if "quotes_bid_ask_venue_differ_frac" in q]
+    crs = [q["quotes_crossed"] / q["n_quotes"] for q in qs]
+    qsum = (f"AAPL, first 2 min of the open, {len(qs)} sessions: bid and ask venues differ in {min(dif):.0%}-{max(dif):.0%} of quotes (consolidated-style stream; not proven to be the official NBBO); "
+            f"crossed quotes {min(crs):.2%}-{max(crs):.2%}; median spread {min(q['median_spread_bps'] for q in qs):.1f}-{max(q['median_spread_bps'] for q in qs):.1f} bps." if dif else "")
 if isum:
     q_ok = any(r["ticks_first_2min_of_open"].get("AAPL", {}).get("n_quotes") for r in isum["sessions"])
     if q_ok:
@@ -226,15 +252,23 @@ if isum:
                        "Observed spreads are still NOT available for the research universe: see QUOTES_NBBO_NOT_MATERIALISED (opened below). Spreads remain ASSUMED in any experiment until then.")
     ledger.add([
         Gap("alpaca_sip_free", "coverage", "MINUTE_AND_TICK_HISTORY_NOT_MATERIALISED", MATERIAL,
-            f"Free tier allows ~150-200 requests/min and 10,000 rows/page. Measured universe: {sizing['symbol_sessions_with_daily_bar']:,} symbol-sessions; minute bars ~"
-            f"{sizing['estimated_total_minute_bars'] / 1e9:.1f}bn rows (~{sizing['days_at_150_req_per_min_minute']:.0f} days of continuous pulling); trades (sum of daily bar trade counts) "
-            f"~{sizing['total_trades_from_daily_bar_counts'] / 1e9:.0f}bn rows (~{sizing['days_at_150_req_per_min_trades'] / 365:.0f} years of continuous pulling); free disk ~30 GB. "
-            "Only a stratified sample (11 sessions x 4 tickers minute bars; 2-minute trade/quote windows at the open for 2 tickers) is on disk. Minute-level experiments must be scoped to an explicitly chosen "
-            "subset of tickers/sessions, declared per experiment; full-universe minute/tick research is infeasible on this tier."),
+            f"Not on disk: only a stratified sample (11 sessions x 4 tickers of minute bars; 2-minute trade/quote windows at the open for 2 tickers). Measured bounds for the {sizing['symbol_sessions_with_daily_bar']:,} "
+            f"symbol-sessions in the daily universe: MINUTE bars <= {sizing['minute_rows_upper_bound_sum_min_trades_960'] / 1e9:.1f}bn rows (upper bound = sum of min(daily trade count, 960); the true count is lower and NOT measured) "
+            f"= <= {sizing['minute_gb_upper_bound']:.0f} GB at the measured {sizing['bytes_per_row_measured_parquet']['minute']} B/row and <= {sizing['minute_days_pulling_upper_bound_150rpm_10k_rows']:.1f} days of pulling at 150 req/min x 10k rows, "
+            f"versus {sizing['free_disk_gb']} GB free: it fits only if the true row count is < {100 * sizing['minute_true_row_count_fraction_that_would_fit_disk']:.0f}% of the bound (unmeasured; a stream-and-discard design would avoid storage). "
+            f"TRADES = {sizing['trades_rows_total'] / 1e9:.0f}bn rows exactly (sum of daily trade counts) = ~{sizing['trades_days_pulling_150rpm_10k_rows']:.0f} days of pulling and ~{sizing['trades_gb_at_measured_bytes'] / 1e3:.1f} TB: not feasible on this tier. "
+            "Minute-level experiments must be scoped to an explicit ticker/session subset declared per experiment; tick-level research on the full universe is not possible.",
+            start=START, end=str(LAST.date())),
         Gap("alpaca_sip_free", "coverage", "QUOTES_NBBO_NOT_MATERIALISED", MATERIAL,
             "Historical SIP quotes are accessible but only sampled (2 minutes at the open, 2 tickers, 11 sessions). No observed-spread series exists for the universe; execution-realism for the "
-            "overnight/premarket track still rests on assumed spreads. See intraday sample stats for crossed-quote behaviour before relying on raw quote rows as an NBBO."),
+            "overnight/premarket track still rests on assumed spreads. Measured: " + qsum + " Crossed rows must be excluded explicitly before any spread is used."),
     ])
+# the first version of this gap (id d459b7af9edd) mis-stated the sizing (unit error: trades "~0 years" instead of ~67 days; minute rows extrapolated from 4 hand-picked tickers).
+# The registry is append-only, so it is superseded, not edited.
+OLD_SIZING_GAP = "d459b7af9edd"
+if OLD_SIZING_GAP in ledger.gaps and ledger.gaps[OLD_SIZING_GAP].status != "RESOLVED":
+    new_id = by_kind_last = [g for g in ledger.gaps.values() if g.kind == "MINUTE_AND_TICK_HISTORY_NOT_MATERIALISED" and g.gap_id != OLD_SIZING_GAP][0].gap_id
+    ledger.resolve(OLD_SIZING_GAP, f"SUPERSEDED BY CORRECTION (not a fix of the data gap): this entry's sizing text was wrong (unit error; unrepresentative extrapolation). The same gap is restated with measured bounds as {new_id}, which is OPEN.")
 ledger.add([Gap("alpaca_sip_free", "coverage", "REALTIME_EMBARGO_15MIN", EXPECTED,
                 "Free tier serves SIP only for end >= 15 minutes ago (measured: HTTP 403 'subscription does not permit querying recent SIP data'). edgelab.alpaca refuses such windows "
                 "(RecentDataRefused) instead of clipping. Historical-only by design; not usable for live signals.")])
@@ -248,7 +282,7 @@ rep.coverage = {
                    "note": ("universe returned, delisted coverage within tolerance" if daily_full else
                             f"{len(requested) - daily['ticker'].nunique():,} requested symbols returned no bars; delisted missing {frac_dl:.1%} (tolerance 2%): survivorship-biased")},
     "minute_bars": {"complete": False, "requested": "same universe, premarket+regular", "ingested": "11 sessions x 4 tickers (Alpaca SIP, 04:00-20:00 ET) + 1 Massive session",
-                    "note": "sample only; full universe infeasible on free tier (see feasibility)"},
+                    "note": "sample only; full-universe minute history is not on disk (measured size bounds in gap MINUTE_AND_TICK_HISTORY_NOT_MATERIALISED)"},
     "news": {"complete": False, "requested": "all tickers, 2024-10..2026-09", "ingested": "6 articles", "note": "sample only; no receipt timestamps (unchanged)"},
     "corporate_actions": {"complete": False, "requested": "splits+dividends, universe",
                           "ingested": f"Massive splits {len(sp_m):,} rows (2016+); Alpaca splits/dividends {'ingested' if sp_a_path.exists() else 'not ingested'}",
@@ -257,7 +291,7 @@ rep.coverage = {
                                       "ingested": f"{prov_m['n_active']:,} active + {prov_m['n_inactive']:,} inactive common stocks (Massive)",
                                       "note": f"no list dates; {st_dl['inactive_without_delist_date']} inactive names lack delisted_utc; ticker reuse/rename history incomplete"},
     "quotes_nbbo": {"complete": False, "requested": "NBBO around the open", "ingested": "sample: 2 tickers x 11 sessions x 2 min (Alpaca SIP quotes)",
-                    "note": "entitled but sample only; per-venue quotes, not a reconstructed NBBO"},
+                    "note": "entitled but sample only; " + (qsum or "quote behaviour not measured")},
 }
 
 REQ = ExperimentRequirements("overnight_news_open_to_close", ["US_EQUITY"], ["daily_bars", "minute_bars", "news", "corporate_actions", "security_master_incl_delisted", "quotes_nbbo"],
@@ -270,7 +304,36 @@ rep.provider_notes += [
     "Other reachable sources (SEC EDGAR, FRED, Nasdaq Trader symbol directory, Yahoo chart API) are still not ingested; using any of them for prices would be a provider substitution and must be declared per experiment.",
 ]
 
+# ============================================================================ E2. measured interpretation (numbers come from the stats above)
+xs = rep.stats.get("cross_provider_daily_alpaca_vs_massive", {})
+ma = xs.get("mismatch_attribution", {})
+ss = rep.stats.get("cross_provider_splits_massive_vs_alpaca", {})
+dy = st_dl["delisted_coverage_by_delist_year"]
+extra_md.append("## Interpretation of the measurements (what the numbers do and do not show)\n\n"
+    "**Alpaca `adjustment=raw` is unadjusted.** Verified on known splits: ORLY 15:1 (1348.10 -> 91.71), NVDA 10:1 (1208.88 -> 121.79), AAPL 4:1 (499.23 -> 129.04), TSLA 3:1 (891.29 -> 296.07). "
+    "Prices are therefore comparable to Massive `adjusted=false` and splits must be applied by us from a splits table.\n\n"
+    f"**Cross-provider daily bars (Alpaca vs Massive, {xs.get('rows_both', 0):,} overlapping bars, {len(xs.get('sample', {}).get('liquid', [])) * 2 + len(xs.get('sample', {}).get('with_split', []))} tickers, sample only).** "
+    f"{ma.get('rows_mismatching_close', 0)} bars differ by >0.5% in close; {ma.get('by_ticker', {})}. Of those, {ma.get('of_which_alpaca_volume_zero', 0)} are Alpaca zero-volume placeholder bars (last price carried forward) while Massive shows positive volume; cause not determined. "
+    "The remaining {ma.get('rows_mismatching_close', 0) - ma.get('of_which_alpaca_volume_zero', 0)} are in tickers that were sampled for having a split in the window and were not individually attributed. The two providers are not reconciled or averaged.\n\n"
+    "**Minute bars (AAPL 2025-07-03, Alpaca vs Massive).** All 499 common bars have identical OHLC (0 mismatches) and volume within 0.2%. The 146 bars present only in Alpaca are all extended-hours: "
+    "the regular session is 210/210 in both (Massive: 210 regular + 250 pre + 39 post = 499 from the earlier provider-side check; Alpaca: 645 = 210 regular + 435 extended).\n\n"
+    f"**Zero-volume placeholder bars.** {st_zv['zero_volume_bars']:,} bars ({st_zv['zero_volume_frac']:.2%}) in {st_zv['tickers_affected']:,} tickers; {st_zv['zero_volume_equal_previous_close']:,} equal the previous close. "
+    f"{st_zv['placeholder_runs_ge_min_run']['runs']} runs of >=60 consecutive placeholder sessions (e.g. {'; '.join(st_zv['placeholder_runs_ge_min_run']['examples'][:3])}) are stretches with no trades for years after which real trading resumes (consistent with a delisting followed by ticker re-use, or a very long halt); runs are not individually attributed. "
+    "Consequence: never derive `alive` from bar existence; use volume > 0. Because placeholders stand in for no-trade days, the session-gap check under-reports missing bars for illiquid names.\n\n"
+    f"**Delisted-name coverage.** {st_dl['delisted_with_bars']:,}/{st_dl['delisted_in_window']:,} delisted names have bars ({1 - st_dl['delisted_missing_frac']:.1%}); tolerance is 98%. Coverage by delisting year: "
+    + ", ".join(f"{y}: {v['coverage']:.0%}" for y, v in dy.items()) + ". Coverage is lowest for 2016-2018 delistings (~90-91%) and highest for 2022-2025 (~97%). "
+    f"Names without bars are listed in data/audit/delisted_names_without_bars.csv ({st_dl['delisted_missing']} rows). {st_dl['delisted_tail_truncated']} further names have bars that stop >5 sessions before delisting.\n\n"
+    f"**Splits.** Massive and Alpaca agree on {ss.get('agree', 0):,} splits; {ss.get('only_in_massive', 0)} appear only in Massive and {ss.get('only_in_alpaca', 0)} only in Alpaca. "
+    f"Restricted to integer-ratio splits the disagreement is {ss.get('integer_ratio_subset', {}).get('only_in_massive', 0)} / {ss.get('integer_ratio_subset', {}).get('only_in_alpaca', 0)} of {ss.get('integer_ratio_subset', {}).get('n_massive', 0):,} / "
+    f"{ss.get('integer_ratio_subset', {}).get('n_alpaca', 0):,}; Massive additionally lists {ss.get('fractional_ratio_events', {}).get('massive', 0):,} fractional-ratio events (ratios that are not integers or reciprocals of integers) vs {ss.get('fractional_ratio_events', {}).get('alpaca', 0):,} in Alpaca. "
+    "Neither table is treated as truth. Recorded splits confirmed in the price data: "
+    f"{st_ca_u['splits_confirmed_in_prices']:,} of {st_ca_u['recorded_splits']:,} in-universe as-of splits.\n\n"
+    f"**Ticker renames.** The rename feed is unusable before 2019 ({rep.stats['ticker_renames']['feed_quality']['events_per_year']}). Of {rep.stats['ticker_renames']['checks']['renames_with_bars_checked']:,} renames that could be checked, "
+    f"{rep.stats['ticker_renames']['checks']['backmapped']} show the old symbol dark and history back-mapped onto the new one, {rep.stats['ticker_renames']['checks']['target_symbol_prior_history']} have prior history under both symbols (ambiguous), "
+    f"and {rep.stats['ticker_renames']['checks']['reused_symbols']} symbols were re-used by a different issuer. A ticker is not an identity: join on FIGI/CUSIP with an effective-dated ticker map.")
+
 # ============================================================================ F. report
+rep.checks_run = list(dict.fromkeys(rep.checks_run))      # de-duplicate, keep order
 ok, why = DiscoveryGate.check(rep, REQ, ledger)
 md = rep.to_markdown(ledger, "Data-integrity report (status as of %s)" % now.strftime("%Y-%m-%d %H:%M UTC"))
 md += "\n\n" + "\n\n".join(extra_md) if extra_md else ""

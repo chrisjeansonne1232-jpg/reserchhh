@@ -540,6 +540,38 @@ def check_daily_ohlc(daily: pd.DataFrame, dataset_id: str) -> tuple[list[Gap], d
     return gaps, st
 
 
+# =============================================================================== check 9d: zero-volume placeholder bars (all names)
+def check_zero_volume_bars(daily: pd.DataFrame, dataset_id: str, min_run: int = 60) -> tuple[list[Gap], dict]:
+    """A bar with volume 0 (and no trades) is not a price observation. If it also has O=H=L=C equal to the previous close it is a provider-side
+    carry-forward: a forward-fill we did not do and must not trade on. Unlike check_stale_daily this covers illiquid names too, and it also
+    means such names' 'no-trade' days do NOT show up as missing sessions -- the placeholder hides them."""
+    d = daily.sort_values(["ticker", "date"])
+    prev_close = d.groupby("ticker")["close"].shift(1)
+    z = d["volume"] <= 0
+    flat = (d["open"] == d["high"]) & (d["high"] == d["low"]) & (d["low"] == d["close"])
+    carried = z & flat & (d["close"] == prev_close)
+    st = {"bars": int(len(d)), "zero_volume_bars": int(z.sum()), "zero_volume_frac": round(float(z.mean()), 5), "tickers_affected": int(d.loc[z, "ticker"].nunique()),
+          "zero_volume_flat_ohlc": int((z & flat).sum()), "zero_volume_equal_previous_close": int(carried.sum()),
+          "zero_volume_first_bar_of_ticker": int((z & prev_close.isna()).sum()),
+          "worst_tickers": d.loc[z].groupby("ticker").size().sort_values(ascending=False).head(5).to_dict()}
+    # long runs of consecutive placeholders = dead periods (delisted -> relisted, or a re-used ticker) bridged by fabricated bars
+    same = d["ticker"].eq(d["ticker"].shift())
+    run_id = (~(same & z.eq(z.shift()))).cumsum()
+    runs = d[z].assign(_r=run_id[z]).groupby("_r").agg(ticker=("ticker", "first"), start=("date", "min"), end=("date", "max"), n=("date", "size"))
+    long = runs[runs["n"] >= min_run].sort_values("n", ascending=False)
+    st["placeholder_runs_ge_min_run"] = {"min_run_sessions": min_run, "runs": int(len(long)), "tickers": int(long["ticker"].nunique()),
+                                         "examples": [f"{r.ticker} {_d(r.start)}..{_d(r.end)} ({r.n} sessions)" for r in long.head(6).itertuples()]}
+    gaps = []
+    if z.any():
+        gaps.append(Gap(dataset_id, "stale", "ZERO_VOLUME_PLACEHOLDER_BARS", MATERIAL,
+                        f"{int(z.sum()):,} bars ({z.mean():.2%}) across {st['tickers_affected']:,} tickers have volume 0; {int((z & flat).sum()):,} are flat O=H=L=C and "
+                        f"{int(carried.sum()):,} equal the previous close, i.e. provider-side carry-forward of the last price on days with no trades. They are kept in the raw store, "
+                        "never used as prices or fills; a panel must mask them explicitly, and no-trade days for these names are otherwise indistinguishable from real bars. "
+                        f"{len(long)} run(s) of >= {min_run} consecutive placeholder sessions in {long['ticker'].nunique()} ticker(s) are stretches with no trades that later resume (consistent with delisting followed by re-listing / ticker re-use; not individually attributed), e.g. "
+                        + "; ".join(st["placeholder_runs_ge_min_run"]["examples"][:3]) + ". 'A bar exists' therefore does NOT mean 'the security was listed': derive alive from volume > 0.", n=int(z.sum())))
+    return gaps, st
+
+
 # =============================================================================== check 9c: split tables agree across providers
 def check_cross_provider_splits(a: pd.DataFrame, b: pd.DataFrame, dataset_id: str, window: tuple[str, str], label_a: str = "A", label_b: str = "B",
                                 day_tol: int = 3, material_frac: float = 0.02, ratio_tol: float = 1e-3) -> tuple[list[Gap], dict]:
@@ -589,7 +621,7 @@ def check_ticker_renames(renames: pd.DataFrame, observed: pd.DataFrame, dataset_
     rn = renames.copy()
     rn["process_date"] = pd.to_datetime(rn["process_date"]).dt.tz_localize(None).dt.normalize()
     obs = observed.set_index("symbol")
-    st = {"renames_in_scope": int(len(rn)), "renames_with_bars_checked": 0, "backmapped": 0, "old_symbol_dark": 0, "reused_symbols": 0, "price_discontinuities": 0}
+    st = {"renames_in_scope": int(len(rn)), "renames_with_bars_checked": 0, "backmapped": 0, "old_symbol_dark": 0, "target_symbol_prior_history": 0, "reused_symbols": 0, "price_discontinuities": 0}
     for _, r in rn.iterrows():
         new, old, pd_ = r["new_symbol"], r["old_symbol"], r["process_date"]
         if new not in obs.index or pd.isna(obs.loc[new, "first_date"]):
@@ -598,15 +630,20 @@ def check_ticker_renames(renames: pd.DataFrame, observed: pd.DataFrame, dataset_
         first = pd.Timestamp(obs.loc[new, "first_date"]).normalize()
         old_first = pd.Timestamp(obs.loc[old, "first_date"]) if old in obs.index and pd.notna(obs.loc[old, "first_date"]) else None
         if first < pd_ - pd.Timedelta(days=backmap_days):
-            st["backmapped"] += 1
             dark = old_first is None
-            st["old_symbol_dark"] += int(dark)
-            gaps.append(Gap(dataset_id, "ticker_renames", "RENAME_HISTORY_BACKMAPPED", MATERIAL,
-                            f"{old}->{new} on {_d(pd_)}: provider returns bars under '{new}' from {_d(first)}, i.e. {(pd_ - first).days} days BEFORE the rename"
-                            + (f"; '{old}' returns no bars at all" if dark else f"; '{old}' returns bars from {_d(old_first)}")
-                            + ". History is keyed by the current symbol: a ticker-keyed point-in-time universe/join would mis-map this name. "
-                              "Key the panel on a permanent identifier (FIGI/CUSIP) with an effective-dated ticker map.",
-                            ticker=new, start=_d(first), end=_d(pd_)))
+            if dark:
+                st["backmapped"] += 1
+                st["old_symbol_dark"] += 1
+                gaps.append(Gap(dataset_id, "ticker_renames", "RENAME_HISTORY_BACKMAPPED", MATERIAL,
+                                f"{old}->{new} on {_d(pd_)}: provider returns bars under '{new}' from {_d(first)}, {(pd_ - first).days} days BEFORE the rename, and '{old}' returns no "
+                                "bars at all: history is keyed by the CURRENT symbol, so a ticker-keyed point-in-time universe/join mis-maps this name. "
+                                "Key the panel on a permanent identifier (FIGI/CUSIP) with an effective-dated ticker map.", ticker=new, start=_d(first), end=_d(pd_)))
+            else:
+                st["target_symbol_prior_history"] = st.get("target_symbol_prior_history", 0) + 1
+                gaps.append(Gap(dataset_id, "ticker_renames", "RENAME_TARGET_SYMBOL_HAS_PRIOR_HISTORY", AMBIGUOUS,
+                                f"{old}->{new} on {_d(pd_)}: '{new}' has bars from {_d(first)} ({(pd_ - first).days} days before the rename) and '{old}' also has bars from {_d(old_first)}. "
+                                "Cannot tell from bars alone whether '" + new + "' was a different issuer earlier (symbol re-use), a merged/duplicated series, or a back-mapped history.",
+                                ticker=new, start=_d(first), end=_d(pd_)))
         if daily is not None:
             g = daily[(daily["ticker"] == new)].sort_values("date")
             g = g[(g["date"] >= pd_ - pd.Timedelta(days=4)) & (g["date"] <= pd_ + pd.Timedelta(days=4))]
@@ -783,10 +820,17 @@ def check_ticks(trades: pd.DataFrame | None, quotes: pd.DataFrame | None, datase
         st.update(n_quotes=int(len(q)), quotes_crossed=int(crossed.sum()), quotes_locked=int(locked.sum()), quotes_one_sided_or_zero=int(one_sided.sum()),
                   quotes_out_of_order=int((q["t"].diff() < pd.Timedelta(0)).sum()),
                   median_spread_bps=round(float((((q["ask"] - q["bid"]) / ((q["ask"] + q["bid"]) / 2))[valid & ~crossed]).median() * 1e4), 3) if valid.any() else None)
+        venue = ""
+        if {"bid_exchange", "ask_exchange"} <= set(q.columns):
+            differ = float((q["bid_exchange"] != q["ask_exchange"]).mean())
+            st["quotes_bid_ask_venue_differ_frac"] = round(differ, 4)
+            st["distinct_bid_venues"] = int(q["bid_exchange"].nunique())
+            venue = (f" Bid and ask come from different venues in {differ:.0%} of rows ({st['distinct_bid_venues']} bid venues): "
+                     + ("consistent with a consolidated best-bid/offer stream; " if differ > 0.5 else "looks like a per-venue stream; ") + "the data alone cannot prove it is the official NBBO.")
         if crossed.sum():
             gaps.append(Gap(dataset_id, "ticks", "CROSSED_QUOTES", AMBIGUOUS,
-                            f"{ticker} {session}: {int(crossed.sum())}/{len(q)} quotes have bid > ask. Per-exchange quote stream, not an NBBO: an NBBO must be rebuilt across venues before any spread is used; "
-                            "raw rows are unusable as spreads", ticker=ticker, start=session, end=session, n=int(crossed.sum())))
+                            f"{ticker} {session}: {int(crossed.sum())}/{len(q)} quotes ({crossed.mean():.2%}) have bid > ask (crossed market)." + venue
+                            + " Rows are kept, never repaired; a spread computed from a crossed row is invalid and must be excluded explicitly.", ticker=ticker, start=session, end=session, n=int(crossed.sum())))
         if one_sided.sum() > 0.01 * len(q):
             gaps.append(Gap(dataset_id, "ticks", "ONE_SIDED_QUOTES", AMBIGUOUS, f"{ticker} {session}: {int(one_sided.sum())} quotes with zero bid or ask",
                             ticker=ticker, start=session, end=session, n=int(one_sided.sum())))

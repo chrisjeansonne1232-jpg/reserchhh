@@ -1,0 +1,41 @@
+{
+ "provider": "Massive REST (free)",
+ "start": "2024-10-01",
+ "end": "2026-09-29",
+ "sample": {
+  "liquid": [
+   "NVDA",
+   "TSLA",
+   "AAPL",
+   "MSFT",
+   "AMZN",
+   "META",
+   "GOOGL",
+   "PLTR",
+   "AMD",
+   "AVGO"
+  ],
+  "random": [
+   "STRZ",
+   "SLDP",
+   "NTST",
+   "LAES",
+   "DOCS",
+   "ALKT",
+   "ADM",
+   "EQX",
+   "CDTG",
+   "ASNS"
+  ],
+  "with_split": [
+   "VRME",
+   "TRUG",
+   "ONMD",
+   "CDT",
+   "AGRZ"
+  ]
+ },
+ "n_bars": 12100,
+ "retrieved_at_utc": "2026-09-30T10:47:44.904996+00:00",
+ "adjusted": false
+}
