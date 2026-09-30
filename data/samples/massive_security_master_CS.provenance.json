@@ -1,0 +1,25 @@
+{
+ "provider": "Massive REST (free tier)",
+ "endpoint": "/v3/reference/tickers?market=stocks&type=CS&active={true,false}",
+ "retrieved_at_utc": "2026-09-30T10:29:48.192549+00:00",
+ "n_active": 5323,
+ "n_inactive": 6625,
+ "columns": [
+  "ticker",
+  "name",
+  "market",
+  "locale",
+  "primary_exchange",
+  "type",
+  "active",
+  "currency_name",
+  "cik",
+  "composite_figi",
+  "share_class_figi",
+  "last_updated_utc",
+  "delisted_utc"
+ ],
+ "n_calls": 14,
+ "sha256_of_sorted_ticker_active_delisted": "dc7242fbb2e650c13771da11c2c66ff63c9ff9a4b95040f6d135b9f0be192001",
+ "transformations": "none"
+}

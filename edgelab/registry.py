@@ -51,6 +51,24 @@ class Registry:
               BEGIN SELECT RAISE(ABORT,'registry is append-only'); END;
             """
         )
+        self._restore_from_mirror()
+
+    def _restore_from_mirror(self) -> None:
+        """A fresh checkout has the committed JSONL mirror but no (git-ignored) sqlite file. Replay the mirror verbatim so new events
+        continue the SAME hash chain instead of starting a second chain from genesis; a mirror that does not verify is refused."""
+        if self.db.execute("SELECT COUNT(*) FROM events").fetchone()[0] or not self.jsonl.exists() or not self.jsonl.read_text().strip():
+            return
+        prev = GENESIS_PREV
+        rows = []
+        for line in self.jsonl.read_text().splitlines():
+            ev = json.loads(line)
+            body = canon(ev["payload"])
+            if ev["prev_hash"] != prev or sha256(f"{ev['prev_hash']}|{ev['ts']!r}|{ev['kind']}|{body}") != ev["hash"]:
+                raise RegistryError(f"JSONL mirror {self.jsonl} does not verify at seq {ev.get('seq')}: refusing to extend a broken chain")
+            rows.append((ev["seq"], ev["ts"], ev["kind"], body, ev["prev_hash"], ev["hash"]))
+            prev = ev["hash"]
+        self.db.executemany("INSERT INTO events(seq,ts,kind,payload,prev_hash,hash) VALUES (?,?,?,?,?,?)", rows)
+        self.db.commit()
 
     # ------------------------------------------------------------------ core
     def _last_hash(self) -> str:

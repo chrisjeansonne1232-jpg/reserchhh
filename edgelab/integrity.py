@@ -58,6 +58,20 @@ class GapLedger:
     def __init__(self, registry=None):
         self.gaps: dict[str, Gap] = {}
         self.reg = registry
+        if registry is not None:
+            self._replay()
+
+    def _replay(self):
+        """Rebuild state from the registry so re-running an audit neither re-appends known gaps nor forgets earlier resolutions."""
+        for e in self.reg.events("DATA_GAP"):
+            p, ev = e["payload"], e["payload"].get("event")
+            if ev == "OPENED":
+                self.gaps[p["gap_id"]] = Gap(**{k: v for k, v in p.items() if k != "event"})
+            elif ev == "RESOLVED" and p["gap_id"] in self.gaps:
+                self.gaps[p["gap_id"]].status, self.gaps[p["gap_id"]].resolution = RESOLVED, p["resolution"]
+            elif ev == "EXCLUDED" and p["gap_id"] in self.gaps:
+                g = self.gaps[p["gap_id"]]
+                g.status, g.resolution, g.excluded_from = EXCLUDED, p["resolution"], list(p["experiments"])
 
     def add(self, gaps: list[Gap]):
         for g in gaps:
@@ -69,6 +83,8 @@ class GapLedger:
 
     def resolve(self, gap_id: str, how: str):
         g = self.gaps[gap_id]
+        if g.status == RESOLVED and g.resolution == how:
+            return
         g.status, g.resolution = RESOLVED, how
         if self.reg is not None:
             self.reg.append("DATA_GAP", {"event": "RESOLVED", "gap_id": gap_id, "resolution": how})
@@ -151,6 +167,22 @@ def _runs(idx: list[int]) -> list[tuple[int, int]]:
 
 def _d(x) -> str:
     return pd.Timestamp(x).strftime("%Y-%m-%d")
+
+
+def aggregate_gaps(gaps: list[Gap], dataset_id: str, examples: int = 6) -> tuple[list[Gap], pd.DataFrame]:
+    """Universe-scale audits emit one gap per ticker/session. The ledger keeps ONE entry per (check, kind, severity) -- with counts,
+    affected tickers and worst examples -- and the complete per-occurrence table is returned so the caller can persist it. Nothing is dropped."""
+    if not gaps:
+        return [], pd.DataFrame()
+    detail = pd.DataFrame([asdict(g) for g in gaps])
+    out: list[Gap] = []
+    for (chk, kind, sev), g in detail.groupby(["check", "kind", "severity"], sort=True):
+        tk = g["ticker"].dropna()
+        ex = "; ".join(g.sort_values("n", ascending=False)["detail"].head(examples).str.slice(0, 160))
+        out.append(Gap(dataset_id, chk, kind, sev, f"{len(g)} occurrence(s), {int(g['n'].sum())} unit(s), {tk.nunique()} distinct ticker(s). Worst/examples: {ex}",
+                       start=g["start"].dropna().min() if g["start"].notna().any() else None, end=g["end"].dropna().max() if g["end"].notna().any() else None,
+                       n=int(g["n"].sum())))
+    return out, detail
 
 
 # =============================================================================== check 3/2: sessions (daily bars)
@@ -440,8 +472,11 @@ def check_corporate_actions(daily_unadj: pd.DataFrame, splits: pd.DataFrame, dat
         sp["ratio"] = sp["split_to"] / sp["split_from"]
     stats = {"recorded_splits": int(len(sp)), "splits_confirmed_in_prices": 0, "splits_without_discontinuity": 0, "unrecorded_discontinuities": 0}
     covered = set()
+    by_ticker = {k: v for k, v in df.groupby("ticker", sort=False)}
+    empty = df.iloc[:0]
     for _, s in sp.iterrows():
-        g = df[(df["ticker"] == s["ticker"]) & (df["date"] >= s["execution_date"] - pd.Timedelta(days=4)) & (df["date"] <= s["execution_date"] + pd.Timedelta(days=4))]
+        g = by_ticker.get(s["ticker"], empty)
+        g = g[(g["date"] >= s["execution_date"] - pd.Timedelta(days=4)) & (g["date"] <= s["execution_date"] + pd.Timedelta(days=4))]
         if g.empty:
             gaps.append(Gap(dataset_id, "corporate_actions", "SPLIT_NO_PRICE_DATA", MATERIAL,
                             f"{s['ticker']}: split on {_d(s['execution_date'])} but no bars within ±4 days", ticker=s["ticker"],
@@ -481,6 +516,281 @@ def check_corporate_actions(daily_unadj: pd.DataFrame, splits: pd.DataFrame, dat
     if dividends is not None and len(dividends):
         stats["recorded_dividends"] = int(len(dividends))
     return gaps, stats
+
+
+# =============================================================================== check 9b: OHLC validity (daily)
+def check_daily_ohlc(daily: pd.DataFrame, dataset_id: str) -> tuple[list[Gap], dict]:
+    """Structural validity of unadjusted daily bars: positive prices, high >= max(open, close), low <= min(open, close), high >= low, volume >= 0."""
+    d = daily
+    tol = 1e-9
+    nonpos = (d[["open", "high", "low", "close"]] <= 0).any(axis=1) | d[["open", "high", "low", "close"]].isna().any(axis=1)
+    bad_hl = (d["high"] < d["low"] - tol)
+    bad_hi = (d["high"] < d[["open", "close"]].max(axis=1) - tol)
+    bad_lo = (d["low"] > d[["open", "close"]].min(axis=1) + tol)
+    negv = d["volume"] < 0
+    st = {"bars": int(len(d)), "nonpositive_or_null_price": int(nonpos.sum()), "high_below_low": int(bad_hl.sum()), "high_below_open_or_close": int(bad_hi.sum()),
+          "low_above_open_or_close": int(bad_lo.sum()), "negative_volume": int(negv.sum())}
+    gaps = []
+    for kind, mask, sev in (("NONPOSITIVE_OR_NULL_PRICE", nonpos, MATERIAL), ("HIGH_BELOW_LOW", bad_hl, MATERIAL), ("HIGH_BELOW_OPEN_OR_CLOSE", bad_hi, MATERIAL),
+                            ("LOW_ABOVE_OPEN_OR_CLOSE", bad_lo, MATERIAL), ("NEGATIVE_VOLUME", negv, MATERIAL)):
+        if mask.any():
+            ex = d[mask].head(3)
+            gaps.append(Gap(dataset_id, "ohlc", kind, sev, f"{int(mask.sum())} bars, e.g. " + "; ".join(f"{r.ticker} {_d(r.date)} o={r.open} h={r.high} l={r.low} c={r.close}" for r in ex.itertuples()),
+                            n=int(mask.sum())))
+    return gaps, st
+
+
+# =============================================================================== check 9c: split tables agree across providers
+def check_cross_provider_splits(a: pd.DataFrame, b: pd.DataFrame, dataset_id: str, window: tuple[str, str], label_a: str = "A", label_b: str = "B",
+                                day_tol: int = 3, material_frac: float = 0.02) -> tuple[list[Gap], dict]:
+    """a, b: [ticker, execution_date, split_from, split_to]. A split matches if same ticker, ratio within 1e-6 and date within `day_tol` days.
+    Only actions inside `window` are compared (tables may include future-dated actions)."""
+    w0, w1 = pd.Timestamp(window[0]), pd.Timestamp(window[1])
+    def prep(x):
+        x = x.copy(); x["execution_date"] = pd.to_datetime(x["execution_date"]).dt.tz_localize(None).dt.normalize()
+        x["ratio"] = x["split_to"].astype(float) / x["split_from"].astype(float)
+        return x[(x["execution_date"] >= w0) & (x["execution_date"] <= w1)].reset_index(drop=True)
+    x, y = prep(a), prep(b)
+    ya = {}
+    for r in y.itertuples():
+        ya.setdefault(r.ticker, []).append((r.execution_date, r.ratio))
+    def has(t, d, ratio, pool):
+        return any(abs((d - dd).days) <= day_tol and abs(ratio / rr - 1) < 1e-6 for dd, rr in pool.get(t, []))
+    xa = {}
+    for r in x.itertuples():
+        xa.setdefault(r.ticker, []).append((r.execution_date, r.ratio))
+    only_a = [r for r in x.itertuples() if not has(r.ticker, r.execution_date, r.ratio, ya)]
+    only_b = [r for r in y.itertuples() if not has(r.ticker, r.execution_date, r.ratio, xa)]
+    st = {f"n_{label_a}": int(len(x)), f"n_{label_b}": int(len(y)), f"only_in_{label_a}": len(only_a), f"only_in_{label_b}": len(only_b),
+          "agree": int(len(x) - len(only_a)), "window": list(window),
+          f"examples_only_{label_a}": [f"{r.ticker} {_d(r.execution_date)} {r.split_to:g}:{r.split_from:g}" for r in only_a[:8]],
+          f"examples_only_{label_b}": [f"{r.ticker} {_d(r.execution_date)} {r.split_to:g}:{r.split_from:g}" for r in only_b[:8]]}
+    gaps = []
+    tot = max(1, len(x) + len(y) - st["agree"])
+    if only_a or only_b:
+        f = (len(only_a) + len(only_b)) / tot
+        gaps.append(Gap(dataset_id, "corporate_actions", "SPLIT_TABLES_DISAGREE", MATERIAL if f > material_frac else MINOR,
+                        f"{len(only_a)} split(s) only in {label_a}, {len(only_b)} only in {label_b} of {tot} distinct actions in {window[0]}..{window[1]} ({f:.1%}); e.g. "
+                        + ", ".join(st[f'examples_only_{label_a}'][:3] + st[f'examples_only_{label_b}'][:3]) + ". Neither table is preferred or merged.", n=len(only_a) + len(only_b)))
+    return gaps, st
+
+
+# =============================================================================== check 10: ticker renames / symbol reuse
+def check_ticker_renames(renames: pd.DataFrame, observed: pd.DataFrame, dataset_id: str, daily: pd.DataFrame | None = None,
+                         jump: float = 0.35, backmap_days: int = 5) -> tuple[list[Gap], dict]:
+    """renames: [old_symbol, new_symbol, process_date, (old_cusip, new_cusip)] (provider corporate-action name changes).
+    observed: [symbol, first_date, last_date] = the first/last bar the provider actually RETURNED for each requested symbol.
+    daily (optional): UNADJUSTED [ticker, date, open, close] used to test price continuity across the rename.
+
+    A ticker is not an identity. Providers that key history by the CURRENT symbol return the old issuer's bars under the
+    new name (BACKMAPPED) and nothing under the name that was actually traded then; a symbol can also be re-used by an
+    unrelated issuer (REUSED). Either makes a ticker-keyed point-in-time universe wrong, silently, so both are ledgered."""
+    gaps: list[Gap] = []
+    rn = renames.copy()
+    rn["process_date"] = pd.to_datetime(rn["process_date"]).dt.tz_localize(None).dt.normalize()
+    obs = observed.set_index("symbol")
+    st = {"renames_in_scope": int(len(rn)), "renames_with_bars_checked": 0, "backmapped": 0, "old_symbol_dark": 0, "reused_symbols": 0, "price_discontinuities": 0}
+    for _, r in rn.iterrows():
+        new, old, pd_ = r["new_symbol"], r["old_symbol"], r["process_date"]
+        if new not in obs.index or pd.isna(obs.loc[new, "first_date"]):
+            continue
+        st["renames_with_bars_checked"] += 1
+        first = pd.Timestamp(obs.loc[new, "first_date"]).normalize()
+        old_first = pd.Timestamp(obs.loc[old, "first_date"]) if old in obs.index and pd.notna(obs.loc[old, "first_date"]) else None
+        if first < pd_ - pd.Timedelta(days=backmap_days):
+            st["backmapped"] += 1
+            dark = old_first is None
+            st["old_symbol_dark"] += int(dark)
+            gaps.append(Gap(dataset_id, "ticker_renames", "RENAME_HISTORY_BACKMAPPED", MATERIAL,
+                            f"{old}->{new} on {_d(pd_)}: provider returns bars under '{new}' from {_d(first)}, i.e. {(pd_ - first).days} days BEFORE the rename"
+                            + (f"; '{old}' returns no bars at all" if dark else f"; '{old}' returns bars from {_d(old_first)}")
+                            + ". History is keyed by the current symbol: a ticker-keyed point-in-time universe/join would mis-map this name. "
+                              "Key the panel on a permanent identifier (FIGI/CUSIP) with an effective-dated ticker map.",
+                            ticker=new, start=_d(first), end=_d(pd_)))
+        if daily is not None:
+            g = daily[(daily["ticker"] == new)].sort_values("date")
+            g = g[(g["date"] >= pd_ - pd.Timedelta(days=4)) & (g["date"] <= pd_ + pd.Timedelta(days=4))]
+            if len(g) > 1:
+                ratio = (g["open"].shift(-1) / g["close"]).iloc[:-1]
+                if ((ratio < 1 - jump) | (ratio > 1 + 2 * jump)).any():
+                    st["price_discontinuities"] += 1
+                    gaps.append(Gap(dataset_id, "ticker_renames", "RENAME_WITH_PRICE_DISCONTINUITY", MATERIAL,
+                                    f"{old}->{new} on {_d(pd_)}: price jumps across the rename (open/prev close {ratio.min():.2f}..{ratio.max():.2f}); "
+                                    "possible different issuer under the same series or an unrecorded action", ticker=new, start=_d(pd_), end=_d(pd_)))
+    # symbol re-use: X is an OLD symbol at d1 and later a NEW symbol at d2 -> two issuers have used X
+    for x in sorted(set(rn["old_symbol"]) & set(rn["new_symbol"])):
+        a = rn[rn["old_symbol"] == x].sort_values("process_date").iloc[0]
+        b = rn[rn["new_symbol"] == x].sort_values("process_date").iloc[-1]
+        if a["process_date"] == b["process_date"]:
+            continue
+        cus_a, cus_b = a.get("old_cusip"), b.get("new_cusip")
+        distinct = bool(cus_a and cus_b and cus_a != cus_b)
+        if distinct or not (cus_a and cus_b):
+            st["reused_symbols"] += 1
+            gaps.append(Gap(dataset_id, "ticker_renames", "SYMBOL_REUSED_ACROSS_ISSUERS", MATERIAL if distinct else AMBIGUOUS,
+                            f"'{x}' was retired on {_d(a['process_date'])} (->{a['new_symbol']}) and later assigned on {_d(b['process_date'])} "
+                            f"(from {b['old_symbol']}); {'CUSIPs differ (' + str(cus_a) + ' vs ' + str(cus_b) + ')' if distinct else 'CUSIPs unavailable'}: "
+                            f"bars keyed '{x}' before {_d(b['process_date'])} do not belong to the current holder of the symbol.",
+                            ticker=x, start=_d(a["process_date"]), end=_d(b["process_date"])))
+    return gaps, st
+
+
+def check_rename_feed(renames: pd.DataFrame, window: tuple[str, str], dataset_id: str, sparse_frac: float = 0.15) -> tuple[list[Gap], dict]:
+    """Quality of the rename/name-change feed ITSELF. A rename check is only as good as the event list: if a year has a small fraction
+    of the typical annual event count, the renames of that year are not observable and ticker continuity there is UNVERIFIED."""
+    gaps: list[Gap] = []
+    rn = renames.copy()
+    rn["process_date"] = pd.to_datetime(rn["process_date"]).dt.tz_localize(None)
+    y0, y1 = pd.Timestamp(window[0]).year, pd.Timestamp(window[1]).year
+    per_year = {int(y): int((rn["process_date"].dt.year == y).sum()) for y in range(y0, y1 + 1)}
+    full_years = [per_year[y] for y in range(y0, y1) if y in per_year]           # exclude the (partial) final year from the reference level
+    ref = float(np.median(sorted(full_years)[len(full_years) // 2:])) if full_years else 0.0    # median of the upper half = the well-covered years
+    end = pd.Timestamp(window[1])
+    share = lambda y: min(1.0, max(1 / 365, ((end - pd.Timestamp(year=y, month=1, day=1)).days + 1) / 365)) if y == y1 else 1.0    # final year is partial
+    sparse = [y for y, n in per_year.items() if ref > 0 and n < sparse_frac * ref * share(y)]
+    cusip = lambda x: isinstance(x, str) and len(x) == 9 and x[:8].isalnum() and x[8].isdigit() and any(c.isdigit() for c in x[:6]) and x.upper() == x
+    st = {"events": int(len(rn)), "events_per_year": per_year, "reference_events_per_year": ref, "sparse_years": sparse,
+          "first_event": str(rn["process_date"].min().date()) if len(rn) else None,
+          "noop_renames": int((rn["old_symbol"] == rn["new_symbol"]).sum()),
+          "cusip_as_symbol": int((rn["old_symbol"].map(cusip) | rn["new_symbol"].map(cusip)).sum()),
+          "duplicate_events": int(rn.duplicated(["old_symbol", "new_symbol", "process_date"]).sum())}
+    if sparse:
+        gaps.append(Gap(dataset_id, "ticker_renames", "RENAME_FEED_SPARSE", MATERIAL,
+                        f"rename feed has {', '.join(f'{y}: {per_year[y]}' for y in sparse)} events vs ~{ref:.0f}/yr in well-covered years (first event {st['first_event']}): "
+                        f"renames in {sparse[0]}..{sparse[-1]} are NOT observable, so ticker continuity there is unverified and the rename check cannot clear it",
+                        start=f"{sparse[0]}-01-01", end=f"{sparse[-1]}-12-31", n=sum(per_year[y] for y in sparse)))
+    if st["noop_renames"]:
+        gaps.append(Gap(dataset_id, "ticker_renames", "NOOP_RENAME_EVENTS", MINOR, f"{st['noop_renames']} events have old_symbol == new_symbol (CUSIP/class change only)", n=st["noop_renames"]))
+    if st["cusip_as_symbol"]:
+        gaps.append(Gap(dataset_id, "ticker_renames", "CUSIP_IN_SYMBOL_FIELD", MINOR, f"{st['cusip_as_symbol']} events carry a CUSIP where a ticker is expected; they cannot be joined to bars by symbol", n=st["cusip_as_symbol"]))
+    if st["duplicate_events"]:
+        gaps.append(Gap(dataset_id, "ticker_renames", "DUPLICATE_RENAME_EVENTS", MINOR, f"{st['duplicate_events']} duplicate rename events", n=st["duplicate_events"]))
+    return gaps, st
+
+
+# =============================================================================== check 11: delisted-name coverage
+def check_delisted_coverage(master: pd.DataFrame, observed: pd.DataFrame, window: tuple[str, str], dataset_id: str,
+                            max_missing_frac: float = 0.02, tail_sessions: int = 5, cal: "MarketCalendar | None" = None) -> tuple[list[Gap], dict]:
+    """master: [ticker, active(bool), delisted_utc] (security master incl. inactive). observed: [symbol, first_date, last_date, n_bars].
+    Every name the master says was listed at any time in `window` and delisted inside it must have bars; otherwise the panel is
+    survivorship-biased. Threshold matches edgelab.data.audit_survivorship (2%). The full missing list is returned in stats
+    (`missing_names`) so the caller can persist it -- nothing is dropped silently."""
+    gaps: list[Gap] = []
+    w0, w1 = pd.Timestamp(window[0]).tz_localize(None), pd.Timestamp(window[1]).tz_localize(None)
+    m = master.copy()
+    m["delist"] = pd.to_datetime(m["delisted_utc"], utc=True, errors="coerce").dt.tz_convert(None).dt.normalize() if "delisted_utc" in m else pd.NaT
+    obs = observed.drop_duplicates("symbol").set_index("symbol")
+    inactive = m[~m["active"].astype(bool)]
+    undated = inactive[inactive["delist"].isna()]
+    dl = inactive[(inactive["delist"] >= w0) & (inactive["delist"] <= w1)].copy()
+    dl["has_bars"] = dl["ticker"].isin(obs.index) & (obs["n_bars"].reindex(dl["ticker"]).fillna(0).to_numpy() > 0)
+    act = m[m["active"].astype(bool)].copy()
+    act["has_bars"] = act["ticker"].isin(obs.index) & (obs["n_bars"].reindex(act["ticker"]).fillna(0).to_numpy() > 0)
+    missing = dl[~dl["has_bars"]]
+    frac = len(missing) / max(1, len(dl))
+    by_year = {str(y): {"delisted": int(len(g)), "with_bars": int(g["has_bars"].sum()), "coverage": round(float(g["has_bars"].mean()), 4)}
+               for y, g in dl.groupby(dl["delist"].dt.year)}
+    st = {"window": list(window), "master_active": int(len(act)), "master_inactive": int(len(inactive)), "delisted_in_window": int(len(dl)),
+          "delisted_with_bars": int(dl["has_bars"].sum()), "delisted_missing": int(len(missing)), "delisted_missing_frac": round(frac, 4),
+          "active_with_bars": int(act["has_bars"].sum()), "active_missing": int((~act["has_bars"]).sum()),
+          "delisted_coverage_by_delist_year": by_year, "missing_names": sorted(missing["ticker"]),
+          "inactive_without_delist_date": int(len(undated))}
+    if len(dl) and frac > max_missing_frac:
+        gaps.append(Gap(dataset_id, "delisted_coverage", "DELISTED_NAMES_NO_BARS", MATERIAL,
+                        f"{len(missing)}/{len(dl)} names the security master lists as delisted in {window[0]}..{window[1]} ({frac:.1%}) have NO bars from the provider "
+                        f"(threshold {max_missing_frac:.0%}). The panel is survivorship-biased; by delist year: "
+                        + ", ".join(f"{y}: {v['with_bars']}/{v['delisted']}" for y, v in by_year.items()), n=len(missing),
+                        start=window[0], end=window[1]))
+    elif len(missing):
+        gaps.append(Gap(dataset_id, "delisted_coverage", "DELISTED_NAMES_NO_BARS", MINOR,
+                        f"{len(missing)}/{len(dl)} delisted names ({frac:.1%}) have no bars (within the {max_missing_frac:.0%} tolerance)", n=len(missing)))
+    # tail truncation: bars stop well before the delisting date
+    trunc = []
+    for _, r in dl[dl["has_bars"]].iterrows():
+        last = pd.Timestamp(obs.loc[r["ticker"], "last_date"])
+        lag = (len(cal.sessions(last, r["delist"])) - 1) if cal is not None and last < r["delist"] else max(0, (r["delist"] - last).days * 5 // 7)
+        if lag > tail_sessions:
+            trunc.append((r["ticker"], lag))
+    st["delisted_tail_truncated"] = len(trunc)
+    if trunc:
+        tf = len(trunc) / max(1, int(dl["has_bars"].sum()))
+        gaps.append(Gap(dataset_id, "delisted_coverage", "DELISTED_TAIL_TRUNCATED", MATERIAL if tf > max_missing_frac else MINOR,
+                        f"{len(trunc)} delisted names ({tf:.1%} of those with bars) have bars ending >{tail_sessions} sessions before the delisting date: the final "
+                        "(often worst) returns are absent. Terminal returns are never assumed to be zero.", n=len(trunc)))
+        st["tail_truncated_names"] = sorted(t for t, _ in trunc)
+    if len(act) and (~act["has_bars"]).mean() > max_missing_frac:
+        gaps.append(Gap(dataset_id, "delisted_coverage", "ACTIVE_NAMES_NO_BARS", MATERIAL,
+                        f"{int((~act['has_bars']).sum())}/{len(act)} currently-active common stocks returned no bars", n=int((~act["has_bars"]).sum())))
+    if len(undated):
+        gaps.append(Gap(dataset_id, "delisted_coverage", "INACTIVE_WITHOUT_DELIST_DATE", AMBIGUOUS,
+                        f"{len(undated)} inactive securities carry no delisted_utc: cannot be placed in time, so their coverage cannot be judged", n=len(undated)))
+    return gaps, st
+
+
+# =============================================================================== check 12: cross-provider validation
+def check_cross_provider_daily(primary: pd.DataFrame, reference: pd.DataFrame, dataset_id: str, price_tol: float = 0.005,
+                               volume_tol: float = 0.05, material_frac: float = 0.01, key: str = "date", intraday: bool = False) -> tuple[list[Gap], dict]:
+    """Both frames UNADJUSTED [ticker, <key>, open, high, low, close, volume]. Differences are recorded, never reconciled or averaged.
+    intraday=True joins on the exact (UTC) timestamp in `key` instead of the session date."""
+    a, b = primary.copy(), reference.copy()
+    for d in (a, b):
+        d[key] = pd.to_datetime(d[key], utc=True) if intraday else pd.to_datetime(d[key]).dt.tz_localize(None).dt.normalize()
+    m = a.merge(b, on=["ticker", key], how="outer", suffixes=("_p", "_r"), indicator=True)
+    both = m[m["_merge"] == "both"]
+    gaps: list[Gap] = []
+    st = {"rows_both": int(len(both)), "only_primary": int((m["_merge"] == "left_only").sum()), "only_reference": int((m["_merge"] == "right_only").sum())}
+    for col in ("open", "high", "low", "close"):
+        rel = (both[f"{col}_p"] / both[f"{col}_r"] - 1).abs()
+        st[f"{col}_mismatch_frac"] = round(float((rel > price_tol).mean()), 5) if len(both) else float("nan")
+    vrel = (both["volume_p"] / both["volume_r"].replace(0, np.nan) - 1).abs()
+    st["volume_mismatch_frac"] = round(float((vrel > volume_tol).mean()), 5) if len(both) else float("nan")
+    st["volume_median_ratio_primary_over_reference"] = round(float((both["volume_p"] / both["volume_r"].replace(0, np.nan)).median()), 4) if len(both) else float("nan")
+    worst = max(st[f"{c}_mismatch_frac"] for c in ("open", "high", "low", "close")) if len(both) else float("nan")
+    if len(both) and worst > 0:
+        gaps.append(Gap(dataset_id, "cross_provider", "PRICE_MISMATCH_BETWEEN_PROVIDERS", MATERIAL if worst > material_frac else MINOR,
+                        f"{worst:.2%} of overlapping bars differ by >{price_tol:.1%} in at least one OHLC field (rows compared: {len(both)}); not reconciled", n=int(len(both) * worst)))
+    if len(both) and st["volume_mismatch_frac"] > material_frac:
+        gaps.append(Gap(dataset_id, "cross_provider", "VOLUME_MISMATCH_BETWEEN_PROVIDERS", MINOR,
+                        f"{st['volume_mismatch_frac']:.2%} of overlapping bars differ by >{volume_tol:.0%} in volume (median primary/reference {st['volume_median_ratio_primary_over_reference']}); "
+                        "consolidated-volume definitions differ between vendors", n=int(len(both) * st["volume_mismatch_frac"])))
+    if st["only_primary"] or st["only_reference"]:
+        tot = max(1, len(m))
+        f = (st["only_primary"] + st["only_reference"]) / tot
+        gaps.append(Gap(dataset_id, "cross_provider", "BAR_PRESENT_IN_ONE_PROVIDER_ONLY", MATERIAL if f > material_frac else AMBIGUOUS,
+                        f"{st['only_primary']} bars only in primary, {st['only_reference']} only in reference ({f:.2%} of union): cannot tell which provider is complete", n=st["only_primary"] + st["only_reference"]))
+    return gaps, st
+
+
+# =============================================================================== check 13: tick data sanity (trades / quotes)
+def check_ticks(trades: pd.DataFrame | None, quotes: pd.DataFrame | None, dataset_id: str, ticker: str, session: str) -> tuple[list[Gap], dict]:
+    gaps: list[Gap] = []
+    st: dict = {}
+    if trades is not None and len(trades):
+        t = trades
+        st.update(n_trades=int(len(t)), trades_nonpositive_price_or_size=int(((t["price"] <= 0) | (t["size"] <= 0)).sum()),
+                  trades_out_of_order=int((t["t"].diff() < pd.Timedelta(0)).sum()), trades_duplicate_ids=int(t["trade_id"].duplicated().sum()) if "trade_id" in t else 0)
+        if st["trades_nonpositive_price_or_size"]:
+            gaps.append(Gap(dataset_id, "ticks", "NONPOSITIVE_TRADE", MATERIAL, f"{ticker} {session}: {st['trades_nonpositive_price_or_size']} trades with price/size <= 0",
+                            ticker=ticker, start=session, end=session, n=st["trades_nonpositive_price_or_size"]))
+        if st["trades_out_of_order"]:
+            gaps.append(Gap(dataset_id, "ticks", "TRADES_OUT_OF_ORDER", MINOR, f"{ticker} {session}: {st['trades_out_of_order']} trades out of timestamp order (sorted by provider sequence?)",
+                            ticker=ticker, start=session, end=session, n=st["trades_out_of_order"]))
+    if quotes is not None and len(quotes):
+        q = quotes
+        valid = (q["bid"] > 0) & (q["ask"] > 0)
+        crossed, locked = (q["bid"] > q["ask"]) & valid, (q["bid"] == q["ask"]) & valid
+        one_sided = ~valid
+        st.update(n_quotes=int(len(q)), quotes_crossed=int(crossed.sum()), quotes_locked=int(locked.sum()), quotes_one_sided_or_zero=int(one_sided.sum()),
+                  quotes_out_of_order=int((q["t"].diff() < pd.Timedelta(0)).sum()),
+                  median_spread_bps=round(float((((q["ask"] - q["bid"]) / ((q["ask"] + q["bid"]) / 2))[valid & ~crossed]).median() * 1e4), 3) if valid.any() else None)
+        if crossed.sum():
+            gaps.append(Gap(dataset_id, "ticks", "CROSSED_QUOTES", AMBIGUOUS,
+                            f"{ticker} {session}: {int(crossed.sum())}/{len(q)} quotes have bid > ask. Per-exchange quote stream, not an NBBO: an NBBO must be rebuilt across venues before any spread is used; "
+                            "raw rows are unusable as spreads", ticker=ticker, start=session, end=session, n=int(crossed.sum())))
+        if one_sided.sum() > 0.01 * len(q):
+            gaps.append(Gap(dataset_id, "ticks", "ONE_SIDED_QUOTES", AMBIGUOUS, f"{ticker} {session}: {int(one_sided.sum())} quotes with zero bid or ask",
+                            ticker=ticker, start=session, end=session, n=int(one_sided.sum())))
+    return gaps, st
 
 
 # =============================================================================== report & gate
