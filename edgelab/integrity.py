@@ -534,7 +534,12 @@ class IntegrityReport:
         L += ["## Statistics", "", "```json", json.dumps(self.stats, indent=1, default=str), "```", ""]
         L += ["## Gap ledger summary", ""]
         s = ledger.summary()
-        L.append(s.to_markdown(index=False) if len(s) else "_no gaps recorded_")
+        if len(s):
+            L.append("| " + " | ".join(s.columns) + " |")
+            L.append("|" + "---|" * len(s.columns))
+            L += ["| " + " | ".join(str(v) for v in r) + " |" for r in s.itertuples(index=False)]
+        else:
+            L.append("_no gaps recorded_")
         L += ["", "## Material gaps (all listed)", ""]
         mg = [g for g in ledger.gaps.values() if g.severity == MATERIAL]
         if not mg:

@@ -1,0 +1,23 @@
+{
+ "provider": "Massive (MCP connector)",
+ "dataset": "stocks daily aggregates, adjusted=false",
+ "endpoint": "/v2/aggs/ticker/{T}/range/1/day/2025-06-02/2025-07-11",
+ "tickers": [
+  "ORLY",
+  "AAPL"
+ ],
+ "retrieved_at_utc": "2026-09-30T09:52:01.436704+00:00",
+ "provider_timestamp_convention": "t = epoch ms of 00:00 America/New_York on the session date (04:00Z under EDT)",
+ "splits_endpoint": "/stocks/v1/splits?ticker=ORLY",
+ "splits": [
+  {
+   "ticker": "ORLY",
+   "execution_date": "2025-06-10",
+   "split_from": 1,
+   "split_to": 15,
+   "adjustment_type": "stock_dividend"
+  }
+ ],
+ "transformations": "none (columns renamed o,h,l,c,v,t -> open,high,low,close,volume,date)",
+ "limitations": "SAMPLE ONLY (2 tickers, 28 sessions); not the research dataset"
+}
