@@ -25,6 +25,7 @@ RAW = ROOT / "data" / "raw"
 BIG = 10 ** 9
 BASE = dict(top_n=SPEC["universe"]["top_n"], lookback=SPEC["universe"]["lookback_sessions"], min_price=SPEC["universe"]["min_last_close"])
 TW = SPEC["twins"]
+CONT_DAYS = SPEC["twins"].get("continuation_calendar_days", 90)
 COMMON = np.array(SPEC["split_resolution"]["common_ratios"], dtype=float)
 
 
@@ -50,9 +51,12 @@ def resolve_twins(daily: pd.DataFrame, min_identical: int = TW["min_identical_se
         for r in cnt.itertuples():
             overlap = sum(1 for x in (nd[r.ticker] & nd[r.ticker_b]) if r.first_identical <= x <= r.last_identical)      # sessions both traded inside the identical stretch
             if overlap and r.identical_sessions / overlap >= min_frac:
-                keep, drop = sorted((r.ticker, r.ticker_b), key=lambda t: (-span.loc[t, "last"].value, span.loc[t, "first"].value, t))
-                rows.append({"kept": keep, "dropped": drop, "identical_sessions": int(r.identical_sessions), "overlap_sessions": int(overlap)})
-    tw = pd.DataFrame(rows, columns=["kept", "dropped", "identical_sessions", "overlap_sessions"])
+                end_ = r.last_identical + pd.Timedelta(days=CONT_DAYS)
+                cont = {t: any(r.last_identical < x <= end_ for x in nd[t]) for t in (r.ticker, r.ticker_b)}      # bars continue just after the stretch
+                keep, drop = sorted((r.ticker, r.ticker_b), key=lambda t: (not cont[t], -span.loc[t, "last"].value, span.loc[t, "first"].value, t))
+                rows.append({"kept": keep, "dropped": drop, "identical_sessions": int(r.identical_sessions), "overlap_sessions": int(overlap),
+                             "first_identical": r.first_identical, "last_identical": r.last_identical})
+    tw = pd.DataFrame(rows, columns=["kept", "dropped", "identical_sessions", "overlap_sessions", "first_identical", "last_identical"])
     if not len(tw):
         tw["cells_dropped"] = []
         return daily, tw
@@ -63,6 +67,24 @@ def resolve_twins(daily: pd.DataFrame, min_identical: int = TW["min_identical_se
     out = daily.merge(drop_rows.assign(_drop=1), on=["ticker", "date"], how="left")
     out = out[out["_drop"].isna()].drop(columns="_drop")
     tw["cells_dropped"] = tw["dropped"].map(drop_rows.groupby("ticker").size()).fillna(0).astype(int)
+    # merge: the dropped twin's own real bars INSIDE the identical stretch (sessions the kept ticker has no real bar) move to the kept ticker, so one security is one column
+    realk = real[["ticker", "date"]]
+    mv = []
+    for r in tw.itertuples():
+        own = out[(out["ticker"] == r.dropped) & (out["volume"] > 0) & (out["date"] >= r.first_identical) & (out["date"] <= r.last_identical)]
+        if len(own):
+            own = own[~own["date"].isin(realk.loc[realk["ticker"] == r.kept, "date"])]
+        mv.append(own.assign(ticker=r.kept))
+    moved = pd.concat(mv) if mv else out.iloc[0:0]
+    tw["cells_moved"] = [int(len(m_)) for m_ in mv]
+    if len(moved):
+        gone = moved[["ticker", "date"]].assign(_g=1)
+        out = out.merge(gone, on=["ticker", "date"], how="left")            # the kept ticker's placeholder row on a moved date
+        out = out[out["_g"].isna()].drop(columns="_g")
+        orig = pd.concat([m_.assign(ticker=r.dropped) for m_, r in zip(mv, tw.itertuples()) if len(m_)])[["ticker", "date"]].assign(_o=1)
+        out = out.merge(orig, on=["ticker", "date"], how="left")
+        out = out[out["_o"].isna()].drop(columns="_o")
+        out = pd.concat([out, moved], ignore_index=True).sort_values(["ticker", "date"], ignore_index=True)
     return out, tw
 
 

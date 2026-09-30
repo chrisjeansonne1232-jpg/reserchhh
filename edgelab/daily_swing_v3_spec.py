@@ -28,9 +28,9 @@ SPEC["review_findings_addressed"] = [
 ]
 SPEC["twins"] = {
     "problem": "the provider serves a renamed security's full history under the NEW ticker while the OLD ticker keeps its own history: two tickers, bit-identical bars, both rank as members",
-    "rule": "pairs of tickers with identical open/high/low/close/volume on >= min_identical_sessions sessions, and on >= min_identical_fraction_within_stretch of the sessions they both traded between their first and last identical session, are twins; keep the ticker whose history ends later (tie: starts earlier, then alphabetical), drop the other's identical bars BEFORE ranking. The test is within the identical STRETCH because a re-used ticker (e.g. DOC, FISV) can have an unrelated issuer's history before the twin stretch",
-    "min_identical_sessions": 20, "min_identical_fraction_within_stretch": 0.9,
-    "information": "same-day bars only; no return is used. Which ticker is kept uses the end of history (a label, not a return)",
+    "rule": "pairs of tickers with identical open/high/low/close/volume on >= min_identical_sessions sessions, and on >= min_identical_fraction_within_stretch of the sessions they both traded between their first and last identical session, are twins; keep the ticker that CONTINUES (has a real bar within continuation_calendar_days after the last identical session; tie: history ends later, then starts earlier, then alphabetical), drop the other's identical bars BEFORE ranking, and MOVE the dropped ticker's own real bars inside the identical stretch on sessions the kept ticker has no real bar to the kept ticker, so one security is one column (the first version left the two halves of one history in two columns, which changed the rank near the cut-off depending on how much data was visible). The test is within the identical STRETCH because a re-used ticker (e.g. DOC, FISV) can have an unrelated issuer's history before the twin stretch",
+    "min_identical_sessions": 20, "min_identical_fraction_within_stretch": 0.9, "continuation_calendar_days": 90,
+    "information": "same-day bars only; no return is used. Which ticker is kept is a LABEL choice that can depend on bars after the cut; because bars are merged into one column, the set of security-days is the same either way, and R5a/R5c compare bar content (session, open, close, volume) so a label does not count as a membership difference",
 }
 SPEC["identity"]["ticker_hand_over_fix"] = {
     "problem": SPEC["identity"]["ticker_hand_over_fix"]["problem"],
@@ -57,7 +57,7 @@ _kind = {"R1": "construction_check", "R2a": "substantive", "R2b": "substantive",
          "R5a": "substantive", "R5b": "substantive", "R6a": "construction_check", "R6b": "construction_check", "R6c": "construction_check", "R6d": "substantive", "R7a": "substantive",
          "R7b": "substantive", "R8": "construction_check", "R9": "construction_check"}
 new = [
-    {"id": "R5c", "text": "Point-in-time of the FINAL panel: rebuilding the whole pipeline (twins, claims, masks, ranking) from bars and listings truncated at each of 3 random cut sessions changes at most this share of the final member cells at sessions <= cut", "metric": "share", "op": "<=", "threshold": 0.0005, "min_cuts": 3},
+    {"id": "R5c", "text": "Point-in-time of the FINAL panel: rebuilding the whole pipeline (twins, claims, masks, ranking) from bars and listings truncated at each of 3 random cut sessions changes at most this share of the final member cells at sessions <= cut (cells compared by bar content: session, open, close, volume)", "metric": "share", "op": "<=", "threshold": 0.0005, "min_cuts": 3},
     {"id": "R6e", "text": "Twin securities: final member cells whose bar is bit-identical to another member's bar on the same session", "metric": "cells", "op": "==", "threshold": 0},
     {"id": "R6f", "text": "Causal identity tail mask: share of raw (ranked) member cells removed", "metric": "share", "op": "<=", "threshold": 0.03},
 ]
@@ -68,6 +68,9 @@ i6 = [r["id"] for r in reqs].index("R6d") + 1
 reqs[i6:i6] = [new[1], new[2]]
 for r in reqs:
     r["kind"] = {"R5c": "substantive", "R6e": "substantive", "R6f": "substantive"}.get(r["id"], _kind.get(r["id"], "substantive"))
+for r in reqs:
+    if r["id"] == "R5a":
+        r["text"] += " (V3: the WHOLE pipeline is rebuilt from truncated bars/listings; cells compared by bar content: session, open, close, volume)"
 SPEC["requirements"] = reqs
 for r in SPEC["requirements"]:
     if r["id"] == "R9":

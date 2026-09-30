@@ -131,16 +131,18 @@ D["R4c"] = f"{ncell_removed:,} of {ncell_raw:,} member cells removed; {int((memb
 # R5a (ranking) and R5c (FINAL panel): rebuild the whole pipeline from bars and listings truncated at random cuts
 rng = np.random.default_rng(0)
 cuts = sorted(int(x) for x in rng.choice(np.arange(t0 + 150, T - 5), 3, replace=False))
-named_full_raw = set(zip(cube.spell_ticker[np.nonzero(member_raw)[1]].astype(str), np.nonzero(member_raw)[0].tolist()))
-named_full = set(zip(cube.spell_ticker[np.nonzero(member)[1]].astype(str), np.nonzero(member)[0].tolist()))
+def _cells(cb, m, upto):
+    """member cells as bar content (session, open, close, volume): a ticker label is not part of the cell"""
+    r_, c_ = np.nonzero(m[:upto + 1])
+    return set(zip(r_.tolist(), np.round(cb.open[r_, c_], 6).tolist(), np.round(cb.close[r_, c_], 6).tolist(), cb.volume[r_, c_].tolist()))
+
+
 diffs_raw, worst_share, per_cut = 0, 0.0, []
 for cut in cuts:
     c3 = build_ctx3(d_raw[d_raw["date"] <= sess[cut]], master, snaps[snaps["snapshot_date"] <= sess[cut]], sm, sa, last=sess[cut], current_master_obs=False)
     s3 = state3(c3)
-    tn_raw = set(zip(c3.cube.spell_ticker[np.nonzero(s3["member_raw"])[1]].astype(str), np.nonzero(s3["member_raw"])[0].tolist()))
-    tn = set(zip(c3.cube.spell_ticker[np.nonzero(s3["member"])[1]].astype(str), np.nonzero(s3["member"])[0].tolist()))
-    a_raw, b_raw = {x for x in named_full_raw if x[1] <= cut}, {x for x in tn_raw if x[1] <= cut}
-    a_fin, b_fin = {x for x in named_full if x[1] <= cut}, {x for x in tn if x[1] <= cut}
+    a_raw, b_raw = _cells(cube, member_raw, cut), _cells(c3.cube, s3["member_raw"], cut)
+    a_fin, b_fin = _cells(cube, member, cut), _cells(c3.cube, s3["member"], cut)
     diffs_raw += len(a_raw ^ b_raw)
     share_ = len(a_fin ^ b_fin) / max(1, len(a_fin))
     worst_share = max(worst_share, share_)
