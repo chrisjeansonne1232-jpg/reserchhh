@@ -542,8 +542,8 @@ def check_daily_ohlc(daily: pd.DataFrame, dataset_id: str) -> tuple[list[Gap], d
 
 # =============================================================================== check 9c: split tables agree across providers
 def check_cross_provider_splits(a: pd.DataFrame, b: pd.DataFrame, dataset_id: str, window: tuple[str, str], label_a: str = "A", label_b: str = "B",
-                                day_tol: int = 3, material_frac: float = 0.02) -> tuple[list[Gap], dict]:
-    """a, b: [ticker, execution_date, split_from, split_to]. A split matches if same ticker, ratio within 1e-6 and date within `day_tol` days.
+                                day_tol: int = 3, material_frac: float = 0.02, ratio_tol: float = 1e-3) -> tuple[list[Gap], dict]:
+    """a, b: [ticker, execution_date, split_from, split_to]. A split matches if same ticker, ratio within `ratio_tol` (providers round rates to ~5 digits) and date within `day_tol` days.
     Only actions inside `window` are compared (tables may include future-dated actions)."""
     w0, w1 = pd.Timestamp(window[0]), pd.Timestamp(window[1])
     def prep(x):
@@ -555,7 +555,7 @@ def check_cross_provider_splits(a: pd.DataFrame, b: pd.DataFrame, dataset_id: st
     for r in y.itertuples():
         ya.setdefault(r.ticker, []).append((r.execution_date, r.ratio))
     def has(t, d, ratio, pool):
-        return any(abs((d - dd).days) <= day_tol and abs(ratio / rr - 1) < 1e-6 for dd, rr in pool.get(t, []))
+        return any(abs((d - dd).days) <= day_tol and abs(ratio / rr - 1) < ratio_tol for dd, rr in pool.get(t, []))
     xa = {}
     for r in x.itertuples():
         xa.setdefault(r.ticker, []).append((r.execution_date, r.ratio))

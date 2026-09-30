@@ -1,0 +1,17 @@
+{
+ "provider": "Alpaca Market Data API (free)",
+ "feed": "sip",
+ "adjustment": "raw",
+ "timeframe": "1Day",
+ "window": [
+  "2016-01-01",
+  "2026-09-30"
+ ],
+ "requested_symbols": 10387,
+ "n_parts": 104,
+ "n_bars": 14521836,
+ "retrieved_at_utc": "2026-09-30T10:41:29.069452+00:00",
+ "provider_timestamp_convention": "t = 00:00 America/New_York expressed in UTC (04:00Z EDT / 05:00Z EST); 'session' column = that NY date",
+ "parts_sha256": "0d20f42a58dda394ea44192b05ab2193e482552f320b6f1deca8389b88ca2a81",
+ "transformations": "columns renamed; session date derived from t; no filtering, filling, or symbol remapping"
+}

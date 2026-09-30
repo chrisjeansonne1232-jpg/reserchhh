@@ -156,7 +156,8 @@ sp_a_path = RAW / "alpaca_splits.parquet"
 if sp_a_path.exists():
     sa = pd.read_parquet(sp_a_path)
     sa = pd.DataFrame({"ticker": sa["symbol"], "execution_date": sa["ex_date"], "split_from": sa["old_rate"], "split_to": sa["new_rate"]})
-    g, st_s = check_cross_provider_splits(sp_m, sa, f"xval_splits_massive_vs_alpaca_{START}_{END}", (START, str(LAST.date())), "massive", "alpaca")
+    universe = set(master["ticker"])                                                    # Massive's table also covers funds/ETFs: compare the research universe only
+    g, st_s = check_cross_provider_splits(sp_m[sp_m["ticker"].isin(universe)], sa[sa["ticker"].isin(universe)], f"xval_splits_massive_vs_alpaca_{START}_{END}", (START, str(LAST.date())), "massive", "alpaca")
     ledger.add(g)
     rep.stats["cross_provider_splits_massive_vs_alpaca"] = st_s
 
