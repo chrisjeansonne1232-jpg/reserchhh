@@ -66,7 +66,7 @@ def thresholds_hash(t: Thresholds = THRESHOLDS) -> str:
 def evaluator_code_hash() -> str:
     h = hashlib.sha256()
     here = Path(__file__).parent
-    for f in ("evaluator.py", "stats.py", "engine.py", "leakage.py", "sandbox.py", "data.py"):
+    for f in ("evaluator.py", "stats.py", "engine.py", "leakage.py", "sandbox.py", "data/panel.py"):
         h.update((here / f).read_bytes())
     return h.hexdigest()
 
