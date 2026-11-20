@@ -16,6 +16,8 @@ come next, in that order.
 5. Download the core data (a few minutes; safe to stop and re-run, it only fetches what is missing):
    `python -m edgelab.data download --tier core --tf 1d 15m 5m`
 6. Prove it works:  `python scripts/prove_sma_spy.py`
+7. Seal the final holdout (ONE time, cannot be undone):  `python -m edgelab.data freeze-holdout`
+   (already done in this repository: see `config/holdout.json`; do not run it again)
 
 ## Layout
 See `docs/PLAN.md`. Research diary: `journal/RESEARCH_JOURNAL.md`.

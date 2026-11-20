@@ -60,17 +60,19 @@ def main():
     # 2 -------------------------------------------------------------- our split adjustment vs provider
     h("2. Our split adjustment vs the provider's own split-adjusted bars (same dates)")
     line("Daily closes, 2016-01-01 .. last cached. Relative difference of OUR adjusted close vs ALPACA `adjustment=split`.\n")
-    line("| symbol | splits in range | median rel diff | max rel diff | verdict |\n|---|---|---|---|---|")
+    line("The provider rounds its adjusted prices to cents, so the correct test is: every difference is at most half a cent.\n")
+    line("| symbol | splits in range | median rel diff | max rel diff | max abs diff ($) | verdict |\n|---|---|---|---|---|---|")
     for sym in ["AAPL", "NVDA", "SPY"]:
         ours = load_bars(sym, "1d", adjust="split")
-        ref = al.stock_bars_adjusted_reference(sym, "1d", ours.index[0], ours.index[-1] + pd.Timedelta(days=1), "split")
+        ref = al.stock_bars_adjusted_reference(sym, "1d", ours.index[0], min(ours.index[-1] + pd.Timedelta(days=1), end), "split")
         j = ours[["close"]].join(ref[["close"]], how="inner", rsuffix="_ref")
         rel = (j.close / j.close_ref - 1).abs()
         from edgelab.data.corporate import CorporateActionsStore
         a = CorporateActionsStore().for_symbol(sym)
         nsp = int((a.kind == "split").sum())
-        ok = rel.max() < 1e-4
-        line(f"| {sym} | {nsp} | {rel.median():.2e} | {rel.max():.2e} | {'MATCH' if ok else 'MISMATCH'} |")
+        absd = (j.close - j.close_ref).abs()
+        ok = absd.max() <= 0.00501
+        line(f"| {sym} | {nsp} | {rel.median():.2e} | {rel.max():.2e} | {absd.max():.4f} | {'MATCH (within provider rounding)' if ok else 'MISMATCH'} |")
         facts[f"split_adj_{sym}"] = {"splits": nsp, "max_rel": float(rel.max()), "bars": int(len(j))}
 
     # 3 -------------------------------------------------------------- total-return vs provider adjustment=all
@@ -78,7 +80,7 @@ def main():
     line("| symbol | median abs diff (bps) | max abs diff (bps) | note |\n|---|---|---|---|")
     for sym in ["SPY", "AAPL"]:
         ours = load_bars(sym, "1d", adjust="total")
-        ref = al.stock_bars_adjusted_reference(sym, "1d", ours.index[0], ours.index[-1] + pd.Timedelta(days=1), "all")
+        ref = al.stock_bars_adjusted_reference(sym, "1d", ours.index[0], min(ours.index[-1] + pd.Timedelta(days=1), end), "all")
         j = ours[["close"]].join(ref[["close"]], how="inner", rsuffix="_ref")
         d = (j.close / j.close_ref - 1).abs() * 1e4
         line(f"| {sym} | {d.median():.2f} | {d.max():.2f} | provider uses its own dividend convention; agreement within a few bps means the same method |")
@@ -119,6 +121,15 @@ def main():
              f"open identical {((jj.open / jj.o - 1).abs() < 1e-4).mean():.2%}; median volume ratio daily/RTH-15m = {(jj.volume / jj.v).median():.3f}")
     except FileNotFoundError as e:
         line(f"skipped ({e})")
+    h("Interpretation (read this)")
+    line("- Alpaca SIP and Massive agree exactly because both report the same consolidated tape. That confirms our ingestion, cache and "
+         "alignment are correct; it is NOT two independent views of the market. No truly independent price source is available on free plans.")
+    line("- Our split adjustment equals the provider's to within cent-rounding. Total-return adjustment agrees within ~2 bps (different dividend rounding).")
+    line("- 5m bars aggregate to the provider's 15m bars exactly, so the intraday timeline and session handling are internally consistent.")
+    line("- The official daily close/open come from the closing/opening auctions, while the last/first 15-minute bar reflects regular-session trades. "
+         "They differ on some days (see the close/open percentages above) and the daily volume is ~20% higher than the regular-hours 15m sum. "
+         "Consequence: never mix daily-bar and intraday-bar prices inside one strategy's signals; each strategy uses ONE timeframe.")
+    line("- Quality WARNs (one-bar spikes) fall on genuine extreme days (Mar-2020 circuit breakers, Apr-2025 tariff crash). They are reported, not removed.")
     Path(ROOT / "docs").mkdir(exist_ok=True)
     (ROOT / "docs" / "DATA_VERIFICATION.md").write_text("\n".join(out) + "\n")
     (ROOT / "docs" / "data_verification_facts.json").write_text(json.dumps(facts, indent=1, default=str))

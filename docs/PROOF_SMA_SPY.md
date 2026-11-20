@@ -43,7 +43,7 @@ Each decision was taken at the PREVIOUS session's close. These crossovers coinci
 | time in market | 84.0% | 99.9% |
 | total costs paid | $725 | $220 |
 
-How to read this: a 50/200 crossover spends time in cash, so it usually earns less than buy-and-hold in a strong bull market but with smaller drawdowns. That is what the numbers show if the machinery is sound; it is NOT evidence of an edge.
+Reading: the crossover earned a lower return than buy-and-hold with the same maximum drawdown. A slow moving-average crossover reacts late (in 2020 the sell signal fired after the market had already bottomed), so it is not expected to beat buy-and-hold. It is a known, simple strategy used to prove the machinery; these numbers are NOT evidence of an edge.
 
 ## 5. Cost sensitivity (same signals)
 

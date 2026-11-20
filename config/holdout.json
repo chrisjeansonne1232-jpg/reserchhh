@@ -1,0 +1,9 @@
+{
+ "holdout_start_utc": "2024-09-16T04:00:00+00:00",
+ "fraction": 0.2,
+ "reference": "SPY 1d",
+ "reference_bars": 2737,
+ "reference_first_bar": "2016-01-04T05:00:00+00:00",
+ "reference_last_bar": "2026-11-19T05:00:00+00:00",
+ "frozen_utc": "2026-11-20T03:07:05.645754+00:00"
+}

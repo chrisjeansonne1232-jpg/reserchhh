@@ -23,3 +23,16 @@ Newest entries at the bottom. Every dead end is recorded here so the search does
 **Dead ends**: none yet (no strategy search has run).
 
 **Next**: validator, proven against known-bad strategies, then the generator.
+
+## 2026-11-20  Data verified on real data; holdout frozen
+
+- Core data downloaded and cached: SPY/QQQ/IWM daily 2016-01..2026-11, 15m and 5m (RTH+extended cached; RTH used),
+  BTC/ETH daily/1h/15m/5m from 2021-01; AAPL/NVDA daily (split-adjustment test cases). Verification: `docs/DATA_VERIFICATION.md`.
+- **Holdout frozen at 2024-09-16** (the last 20% of SPY's trading days). Research data (`load_research_bars`) ends the
+  session before. The SMA/SPY proof used the full history on purpose: it is a pipeline proof of an untuned textbook rule,
+  not a research result.
+- Consequence for crypto: research window is only 2021-01..2024-09 (~3.7 years) and the costs are heavy (33 bps/side),
+  so crypto candidates face a much harder bar than equity ones.
+- Alpaca SIP and Massive agree exactly (same consolidated tape): no independent price source is available on free plans.
+- Daily-bar open/close (auction prices) differ from the first/last regular-session 15m bar on some days: a strategy must
+  use one timeframe only.

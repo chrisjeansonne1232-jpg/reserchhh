@@ -1,0 +1,306 @@
+{
+ "SPY_1d": {
+  "symbol": "SPY",
+  "timeframe": "1d",
+  "rows": 2737,
+  "first": "2016-01-04T05:00:00+00:00",
+  "last": "2026-11-19T05:00:00+00:00",
+  "issues": [],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_sessions": 2737
+  },
+  "ok": true
+ },
+ "QQQ_1d": {
+  "symbol": "QQQ",
+  "timeframe": "1d",
+  "rows": 2737,
+  "first": "2016-01-04T05:00:00+00:00",
+  "last": "2026-11-19T05:00:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 2,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2020-03-12 04:00:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_sessions": 2737
+  },
+  "ok": true
+ },
+ "IWM_1d": {
+  "symbol": "IWM",
+  "timeframe": "1d",
+  "rows": 2737,
+  "first": "2016-01-04T05:00:00+00:00",
+  "last": "2026-11-19T05:00:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 1,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2020-03-12 04:00:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_sessions": 2737
+  },
+  "ok": true
+ },
+ "AAPL_1d": {
+  "symbol": "AAPL",
+  "timeframe": "1d",
+  "rows": 2737,
+  "first": "2016-01-04T05:00:00+00:00",
+  "last": "2026-11-19T05:00:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 1,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2020-03-13 04:00:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_sessions": 2737
+  },
+  "ok": true
+ },
+ "NVDA_1d": {
+  "symbol": "NVDA",
+  "timeframe": "1d",
+  "rows": 2737,
+  "first": "2016-01-04T05:00:00+00:00",
+  "last": "2026-11-19T05:00:00+00:00",
+  "issues": [],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_sessions": 2737
+  },
+  "ok": true
+ },
+ "BTC/USD_1d": {
+  "symbol": "BTC/USD",
+  "timeframe": "1d",
+  "rows": 2149,
+  "first": "2021-01-01T00:00:00+00:00",
+  "last": "2026-11-19T00:00:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 1,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2026-02-05 00:00:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_bars": 2149
+  },
+  "ok": true
+ },
+ "ETH/USD_1d": {
+  "symbol": "ETH/USD",
+  "timeframe": "1d",
+  "rows": 2149,
+  "first": "2021-01-01T00:00:00+00:00",
+  "last": "2026-11-19T00:00:00+00:00",
+  "issues": [],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "expected_bars": 2149
+  },
+  "ok": true
+ },
+ "SPY_15m": {
+  "symbol": "SPY",
+  "timeframe": "15m",
+  "rows": 70883,
+  "first": "2016-01-04T14:30:00+00:00",
+  "last": "2026-11-18T20:45:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 2,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2025-04-07 13:30:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "mean_session_completeness": 1.0
+  },
+  "ok": true
+ },
+ "QQQ_15m": {
+  "symbol": "QQQ",
+  "timeframe": "15m",
+  "rows": 70882,
+  "first": "2016-01-04T14:30:00+00:00",
+  "last": "2026-11-18T20:45:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 2,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2025-04-07 13:30:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "mean_session_completeness": 1.0
+  },
+  "ok": true
+ },
+ "IWM_15m": {
+  "symbol": "IWM",
+  "timeframe": "15m",
+  "rows": 70883,
+  "first": "2016-01-04T14:30:00+00:00",
+  "last": "2026-11-18T20:45:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 3,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2022-06-15 18:30:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "mean_session_completeness": 1.0
+  },
+  "ok": true
+ },
+ "SPY_1h": {
+  "symbol": "SPY",
+  "timeframe": "1h",
+  "rows": 19089,
+  "first": "2016-01-04T14:30:00+00:00",
+  "last": "2026-11-18T20:30:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 1,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2020-03-13 13:30:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "mean_session_completeness": 1.0
+  },
+  "ok": true
+ },
+ "SPY_5m": {
+  "symbol": "SPY",
+  "timeframe": "5m",
+  "rows": 212638,
+  "first": "2016-01-04T14:30:00+00:00",
+  "last": "2026-11-18T20:55:00+00:00",
+  "issues": [
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 1,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2020-03-12 13:55:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.0,
+   "mean_session_completeness": 0.9999
+  },
+  "ok": true
+ },
+ "BTC/USD_1h": {
+  "symbol": "BTC/USD",
+  "timeframe": "1h",
+  "rows": 51538,
+  "first": "2021-01-01T06:00:00+00:00",
+  "last": "2026-11-19T05:00:00+00:00",
+  "issues": [
+   {
+    "check": "missing_bars",
+    "severity": "WARN",
+    "n": 14,
+    "detail": "0.03% of the 24/7 grid is missing (provider omits bars with no trades)"
+   },
+   {
+    "check": "possible_bad_ticks",
+    "severity": "WARN",
+    "n": 7,
+    "detail": "one-bar spikes that reverse next bar, e.g. 2022-05-09 23:00:00+00:00"
+   }
+  ],
+  "stats": {
+   "zero_volume_share": 0.01857,
+   "expected_bars": 51552
+  },
+  "ok": true
+ },
+ "split_adj_AAPL": {
+  "splits": 1,
+  "max_rel": 0.0002213368747232547,
+  "bars": 2737
+ },
+ "split_adj_NVDA": {
+  "splits": 2,
+  "max_rel": 0.0004878048780487809,
+  "bars": 2737
+ },
+ "split_adj_SPY": {
+  "splits": 0,
+  "max_rel": 0.0,
+  "bars": 2737
+ },
+ "total_adj_SPY": {
+  "median_bps": 0.4604819500553248,
+  "max_bps": 0.7763698907625738
+ },
+ "total_adj_AAPL": {
+  "median_bps": 0.20186745131267614,
+  "max_bps": 2.187468246388491
+ },
+ "cross_SPY": {
+  "label": "alpaca vs massive",
+  "overlap_bars": 474,
+  "primary_bars_in_window": 474,
+  "median_abs_close_diff_bps": 0.0,
+  "p99_abs_close_diff_bps": 0.0,
+  "max_abs_close_diff_bps": 0.0,
+  "share_within_tol": 1.0,
+  "tol_bps": 10.0,
+  "median_volume_ratio_a_over_b": 1.0,
+  "ok": true
+ },
+ "cross_QQQ": {
+  "label": "alpaca vs massive",
+  "overlap_bars": 474,
+  "primary_bars_in_window": 474,
+  "median_abs_close_diff_bps": 0.0,
+  "p99_abs_close_diff_bps": 0.0,
+  "max_abs_close_diff_bps": 0.0,
+  "share_within_tol": 1.0,
+  "tol_bps": 10.0,
+  "median_volume_ratio_a_over_b": 1.0,
+  "ok": true
+ },
+ "cross_IWM": {
+  "label": "alpaca vs massive",
+  "overlap_bars": 474,
+  "primary_bars_in_window": 474,
+  "median_abs_close_diff_bps": 0.0,
+  "p99_abs_close_diff_bps": 0.0,
+  "max_abs_close_diff_bps": 0.0,
+  "share_within_tol": 1.0,
+  "tol_bps": 10.0,
+  "median_volume_ratio_a_over_b": 1.0,
+  "ok": true
+ }
+}
